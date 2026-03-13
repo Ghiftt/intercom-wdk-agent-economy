@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import readline from 'readline'
 import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
 import { fundAgentWallets } from '../wdk-sidecar/fund-agents.mjs'
+import { runAgentEconomy } from '../wdk-sidecar/agent-economy.mjs'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
 const ORCHESTRATOR_VERSION = '1.0.0'
@@ -73,7 +74,22 @@ for (const s of fundedSubtasks) {
 
 console.log('\n[ORCH] Broadcasting ' + fundedSubtasks.length + ' subtasks over Intercom sidechannel...')
 await broadcastSubtasks(goal, fundedSubtasks)
-console.log('[OK] Orchestration complete.')
+
+console.log('\n[ORCH] Running agent economy — agents paying each other...')
+const economyResults = await runAgentEconomy(fundedSubtasks)
+
+console.log('\n[ECONOMY SUMMARY]')
+for (const r of economyResults) {
+  if (r.status === 'settled') {
+    console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' ETH | SETTLED ✓')
+  } else if (r.status === 'delivered') {
+    console.log('  ' + r.from + ' → coordinator | report delivered ✓')
+  } else {
+    console.log('  payment failed ✗')
+  }
+}
+
+console.log('\n[OK] Orchestration complete. Agent economy cycle finished.')
 
 }
 

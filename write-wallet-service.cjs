@@ -1,4 +1,6 @@
-import WDK from '@tetherto/wdk'
+const fs = require('fs')
+
+const code = `import WDK from '@tetherto/wdk'
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import { ethers } from 'ethers'
 import * as dotenv from 'dotenv'
@@ -93,4 +95,7 @@ export async function agentPay({ from, to, amount, reason }) {
   console.log('  Status: SETTLED')
 
   return { from, to, amount, reason, fromAddress, toAddress, txHash: tx.hash, status: 'settled' }
-}
+}`
+
+fs.writeFileSync('wdk-sidecar/wallet-service.mjs', code)
+console.log('Done: ' + code.length + ' bytes')
