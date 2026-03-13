@@ -1,0 +1,1 @@
+const fs = require('fs'); fs.writeFileSync('wallet-service.mjs', fs.readFileSync('test-wallet.mjs', 'utf8'));

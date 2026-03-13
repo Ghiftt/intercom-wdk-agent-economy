@@ -1,6 +1,7 @@
 import Hyperswarm from 'hyperswarm'
 import crypto from 'crypto'
 import readline from 'readline'
+import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
 const ORCHESTRATOR_VERSION = '1.0.0'
@@ -53,9 +54,18 @@ async function main() {
   console.log('\nSubtasks:')
   for (const s of subtasks) console.log('  #' + s.id + ' [' + s.agentType + '] ' + s.priority + ' - ' + s.task)
   console.log()
-  console.log('[ORCH] Broadcasting ' + subtasks.length + ' subtasks over Intercom sidechannel...')
-  await broadcastSubtasks(goal, subtasks)
-  console.log('[OK] Orchestration complete.')
+  console.log('[ORCH] Assigning WDK wallets to agents...')
+const enrichedSubtasks = await assignWalletsToSubtasks(subtasks)
+
+console.log('\n[WALLET SUMMARY]')
+for (const s of enrichedSubtasks) {
+  console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + s.wallet)
+}
+
+console.log('\n[ORCH] Broadcasting ' + enrichedSubtasks.length + ' subtasks over Intercom sidechannel...')
+await broadcastSubtasks(goal, enrichedSubtasks)
+console.log('[OK] Orchestration complete.')
+
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
