@@ -2,6 +2,7 @@ import Hyperswarm from 'hyperswarm'
 import crypto from 'crypto'
 import readline from 'readline'
 import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
+import { fundAgentWallets } from '../wdk-sidecar/fund-agents.mjs'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
 const ORCHESTRATOR_VERSION = '1.0.0'
@@ -62,8 +63,16 @@ for (const s of enrichedSubtasks) {
   console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + s.wallet)
 }
 
-console.log('\n[ORCH] Broadcasting ' + enrichedSubtasks.length + ' subtasks over Intercom sidechannel...')
-await broadcastSubtasks(goal, enrichedSubtasks)
+console.log('\n[ORCH] Funding agent wallets on Sepolia...')
+const fundedSubtasks = await fundAgentWallets(enrichedSubtasks)
+
+console.log('\n[FUND SUMMARY]')
+for (const s of fundedSubtasks) {
+  console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + (s.funded ? 'FUNDED ✓ ' + s.txHash : 'FAILED ✗'))
+}
+
+console.log('\n[ORCH] Broadcasting ' + fundedSubtasks.length + ' subtasks over Intercom sidechannel...')
+await broadcastSubtasks(goal, fundedSubtasks)
 console.log('[OK] Orchestration complete.')
 
 }
