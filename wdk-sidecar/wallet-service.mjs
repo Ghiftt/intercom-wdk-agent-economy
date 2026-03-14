@@ -92,7 +92,7 @@ export async function agentPay({ from, to, amount, reason }) {
 console.log('  View:   https://sepolia.etherscan.io/tx/' + tx.hash)
 console.log('  Verifying on-chain...')
 
-await new Promise(r => setTimeout(r, 8000))
+await new Promise(r => setTimeout(r, 12000))
 const receipt = await provider.getTransactionReceipt(tx.hash)
 
 const confirmed = receipt && receipt.status === 1

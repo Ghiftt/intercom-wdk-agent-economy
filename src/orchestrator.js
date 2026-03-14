@@ -5,20 +5,52 @@ import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
 import { fundAgentWallets } from '../wdk-sidecar/fund-agents.mjs'
 import { runAgentEconomy } from '../wdk-sidecar/agent-economy.mjs'
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
+import Groq from 'groq-sdk'
 const ORCHESTRATOR_VERSION = '1.0.0'
 
-function mockDecompose(goal) {
-  return [
-    { id:1, agentType:'data-fetcher', task:'Gather all relevant data for: ' + goal, priority:'high', dependsOn:[] },
-    { id:2, agentType:'analyzer', task:'Analyse the data and identify key actions for: ' + goal, priority:'high', dependsOn:[1] },
-    { id:3, agentType:'executor', task:'Execute actions and produce deliverable for: ' + goal, priority:'medium', dependsOn:[2] },
-  ]
-}
-
 async function decomposeGoal(goal) {
-  console.log('[ORCH] No OPENAI_API_KEY — using mock decomposition')
-  return mockDecompose(goal)
+  console.log('[ORCH] Decomposing goal with Groq Llama 3...')
+  try {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an AI task decomposer. Break down any goal into exactly 3 subtasks for these specialist agents:
+- data-fetcher: gathers raw data and information
+- analyzer: processes and analyzes the data
+- executor: produces the final deliverable or takes action
+
+Respond ONLY with a JSON array, no explanation. Example:
+[
+  {"id":1,"agentType":"data-fetcher","task":"specific task here","priority":"high","dependsOn":[]},
+  {"id":2,"agentType":"analyzer","task":"specific task here","priority":"high","dependsOn":[1]},
+  {"id":3,"agentType":"executor","task":"specific task here","priority":"medium","dependsOn":[2]}
+]`
+        },
+        {
+          role: 'user',
+          content: 'Goal: ' + goal
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 500
+    })
+
+    const content = response.choices[0].message.content.trim()
+    const clean = content.replace(/```json|```/g, '').trim()
+    const subtasks = JSON.parse(clean)
+    console.log('[ORCH] Groq decomposition successful')
+    return subtasks
+  } catch (err) {
+    console.log('[ORCH] Groq failed, using mock decomposition: ' + err.message)
+    return [
+      { id:1, agentType:'data-fetcher', task:'Gather all relevant data for: ' + goal, priority:'high', dependsOn:[] },
+      { id:2, agentType:'analyzer', task:'Analyse the data and identify key actions for: ' + goal, priority:'high', dependsOn:[1] },
+      { id:3, agentType:'executor', task:'Execute actions and produce deliverable for: ' + goal, priority:'medium', dependsOn:[2] },
+    ]
+  }
 }
 
 async function broadcastSubtasks(goal, subtasks) {

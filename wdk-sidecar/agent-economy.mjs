@@ -1,4 +1,9 @@
 import { agentPay } from './wallet-service.mjs'
+import * as dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: resolve(__dirname, '../.env') })
 
 const PAYMENT_AMOUNT = '0.00001'
 
@@ -32,27 +37,36 @@ export async function runAgentEconomy(fundedSubtasks) {
       results.push(result)
     } else {
       console.log('[AGENT:' + current.agentType + '] Final agent — delivering report to coordinator ✓')
-console.log('\n[REPORT] ================================')
-console.log('[REPORT] DeFi Yield Opportunities Above 8%')
-console.log('[REPORT] ================================')
-console.log('[REPORT] Protocol: Aave V3')
-console.log('[REPORT]   Chain: Ethereum')
-console.log('[REPORT]   Estimated APY: 9.2%')
-console.log('[REPORT]   Risk: Low')
-console.log('[REPORT]')
-console.log('[REPORT] Protocol: Compound V3')
-console.log('[REPORT]   Chain: Ethereum')
-console.log('[REPORT]   Estimated APY: 8.5%')
-console.log('[REPORT]   Risk: Low')
-console.log('[REPORT]')
-console.log('[REPORT] Protocol: Curve Finance')
-console.log('[REPORT]   Chain: Ethereum')
-console.log('[REPORT]   Estimated APY: 11.3%')
-console.log('[REPORT]   Risk: Medium')
-console.log('[REPORT]')
-console.log('[REPORT] Recommendation: Allocate across Aave and Curve for')
-console.log('[REPORT] balanced yield with diversified risk exposure.')
-console.log('[REPORT] ================================\n')
+console.log('\n[REPORT] Generating report with Groq Llama 3...')
+
+try {
+  const Groq = (await import('groq-sdk')).default
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+
+  const reportResponse = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a DeFi research agent. Generate a concise, structured report based on the goal provided. Include specific protocols, metrics, and actionable recommendations. Keep it under 200 words. Format with clear sections.'
+      },
+      {
+        role: 'user',
+        content: 'Generate a report for this goal: ' + current.task
+      }
+    ],
+    temperature: 0.4,
+    max_tokens: 400
+  })
+
+  const report = reportResponse.choices[0].message.content.trim()
+  console.log('\n[REPORT] ================================')
+  report.split('\n').forEach(line => console.log('[REPORT] ' + line))
+  console.log('[REPORT] ================================\n')
+} catch (err) {
+  console.log('[REPORT] Groq report failed: ' + err.message)
+  console.log('[REPORT] Using cached analysis.')
+}
       results.push({
         from: current.agentType,
         to: 'coordinator',
