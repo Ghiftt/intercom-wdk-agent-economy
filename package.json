@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "intercom-ai-orchestrator",
   "version": "1.0.0",
   "description": "AI Agent Task Orchestrator built on Trac Network / Intercom",
@@ -8,6 +8,7 @@
     "agent": "node src/agent.js"
   },
   "dependencies": {
+    "ethers": "^6.16.0",
     "hyperswarm": "^4.7.7"
   },
   "engines": {

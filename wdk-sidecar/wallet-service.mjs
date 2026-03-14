@@ -89,8 +89,15 @@ export async function agentPay({ from, to, amount, reason }) {
   })
 
   console.log('  Tx:     ' + tx.hash)
-  console.log('  View:   https://sepolia.etherscan.io/tx/' + tx.hash)
-  console.log('  Status: SETTLED')
+console.log('  View:   https://sepolia.etherscan.io/tx/' + tx.hash)
+console.log('  Verifying on-chain...')
 
-  return { from, to, amount, reason, fromAddress, toAddress, txHash: tx.hash, status: 'settled' }
+await new Promise(r => setTimeout(r, 8000))
+const receipt = await provider.getTransactionReceipt(tx.hash)
+
+const confirmed = receipt && receipt.status === 1
+
+console.log('  Status: ' + (confirmed ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...'))
+
+return { from, to, amount, reason, fromAddress, toAddress, txHash: tx.hash, status: confirmed ? 'settled' : 'pending' }
 }
