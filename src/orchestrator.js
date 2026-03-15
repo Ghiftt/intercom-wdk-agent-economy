@@ -18,15 +18,17 @@ async function decomposeGoal(goal) {
         {
           role: 'system',
           content: `You are an AI task decomposer. Break down any goal into exactly 3 subtasks for these specialist agents:
-- data-fetcher: gathers raw data and information
-- analyzer: processes and analyzes the data
+- analyzer: processes and analyzes gathered data
 - executor: produces the final deliverable or takes action
+- validator: verifies the final output meets the goal
+
+Note: data-fetching is handled separately via a Scout bidding round before these agents run.
 
 Respond ONLY with a JSON array, no explanation. Example:
 [
-  {"id":1,"agentType":"data-fetcher","task":"specific task here","priority":"high","dependsOn":[]},
-  {"id":2,"agentType":"analyzer","task":"specific task here","priority":"high","dependsOn":[1]},
-  {"id":3,"agentType":"executor","task":"specific task here","priority":"medium","dependsOn":[2]}
+  {"id":1,"agentType":"analyzer","task":"specific task here","priority":"high","dependsOn":[]},
+  {"id":2,"agentType":"executor","task":"specific task here","priority":"high","dependsOn":[1]},
+  {"id":3,"agentType":"validator","task":"specific task here","priority":"medium","dependsOn":[2]}
 ]`
         },
         {
@@ -46,9 +48,9 @@ Respond ONLY with a JSON array, no explanation. Example:
   } catch (err) {
     console.log('[ORCH] Groq failed, using mock decomposition: ' + err.message)
     return [
-      { id:1, agentType:'data-fetcher', task:'Gather all relevant data for: ' + goal, priority:'high', dependsOn:[] },
-      { id:2, agentType:'analyzer', task:'Analyse the data and identify key actions for: ' + goal, priority:'high', dependsOn:[1] },
-      { id:3, agentType:'executor', task:'Execute actions and produce deliverable for: ' + goal, priority:'medium', dependsOn:[2] },
+      { id:1, agentType:'analyzer', task:'Analyse all relevant data for: ' + goal, priority:'high', dependsOn:[] },
+      { id:2, agentType:'executor', task:'Execute actions and produce deliverable for: ' + goal, priority:'high', dependsOn:[1] },
+      { id:3, agentType:'validator', task:'Verify the output meets the goal: ' + goal, priority:'medium', dependsOn:[2] },
     ]
   }
 }
@@ -82,63 +84,69 @@ async function main() {
     goal = await new Promise(r => rl.question('Enter your automation goal: ', ans => { rl.close(); r(ans.trim()) }))
   }
   if (!goal) { console.error('No goal. Exiting.'); process.exit(1) }
+
   console.log('[ORCH] Decomposing goal...')
   const subtasks = await decomposeGoal(goal)
   console.log('\nGoal: ' + goal)
   console.log('\nSubtasks:')
   for (const s of subtasks) console.log('  #' + s.id + ' [' + s.agentType + '] ' + s.priority + ' - ' + s.task)
   console.log()
+
   console.log('[ORCH] Assigning WDK wallets to agents...')
-const enrichedSubtasks = await assignWalletsToSubtasks(subtasks)
+  const enrichedSubtasks = await assignWalletsToSubtasks(subtasks)
 
-console.log('\n[WALLET SUMMARY]')
-for (const s of enrichedSubtasks) {
-  console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + s.wallet)
-}
-
-console.log('\n[ORCH] Funding agent wallets on Sepolia...')
-const fundedSubtasks = await fundAgentWallets(enrichedSubtasks)
-
-console.log('\n[FUND SUMMARY]')
-for (const s of fundedSubtasks) {
-  console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + (s.funded ? 'FUNDED ✓ ' + s.txHash : 'FAILED ✗'))
-}
-
-console.log('\n[ORCH] Broadcasting ' + fundedSubtasks.length + ' subtasks over Intercom sidechannel...')
-await broadcastSubtasks(goal, fundedSubtasks)
-
-console.log('\n[ORCH] Running agent economy — agents paying each other...')
-const economyResults = await runAgentEconomy(fundedSubtasks)
-
-console.log('\n[ECONOMY SUMMARY]')
-for (const r of economyResults) {
-  if (r.status === 'settled' || r.status === 'pending') {
-    console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' | SETTLED ✓')
-  } else if (r.status === 'delivered') {
-    console.log('  ' + r.from + ' → coordinator | report delivered ✓')
-  } else {
-    console.log('  ' + JSON.stringify(r))
+  console.log('\n[WALLET SUMMARY]')
+  for (const s of enrichedSubtasks) {
+    console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + s.wallet)
   }
-}  
 
-console.log('\n[WALLET BALANCES]')
-const { ethers: ethersLib } = await import('ethers')
-const balanceProvider = new ethersLib.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
-const USDT_ABI = ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)']
-const usdtContract = new ethersLib.Contract('0x186cca6904490818AB0DC409ca59D932A2366031', USDT_ABI, balanceProvider)
-const usdtDecimals = await usdtContract.decimals()
-const agentWallets = [
-  { name: 'data-fetcher', address: '0x9858EfFD232B4033E47d90003D41EC34EcaEda94' },
-  { name: 'analyzer', address: '0x6Fac4D18c912343BF86fa7049364Dd4E424Ab9C0' },
-  { name: 'executor', address: '0xb6716976A3ebe8D39aCEB04372f22Ff8e6802D7A' },
-]
-for (const agent of agentWallets) {
-  const balance = await usdtContract.balanceOf(agent.address)
-  console.log('  ' + agent.name + ' → ' + ethersLib.formatUnits(balance, usdtDecimals) + ' USDT')
-}
+  console.log('\n[ORCH] Funding agent wallets on Sepolia...')
+  const fundedSubtasks = await fundAgentWallets(enrichedSubtasks)
 
-console.log('\n[OK] Orchestration complete. Agent economy cycle finished.')
+  console.log('\n[FUND SUMMARY]')
+  for (const s of fundedSubtasks) {
+    console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + (s.funded ? 'FUNDED ✓ ' + s.txHash : 'FAILED ✗'))
+  }
 
+  console.log('\n[ORCH] Broadcasting ' + fundedSubtasks.length + ' subtasks over Intercom sidechannel...')
+  await broadcastSubtasks(goal, fundedSubtasks)
+
+  console.log('\n[ORCH] Running agent economy — scouts bidding, agents paying each other...')
+  const economyResults = await runAgentEconomy(fundedSubtasks, goal)
+
+  console.log('\n[ECONOMY SUMMARY]')
+  for (const r of economyResults) {
+    if (r.status === 'settled' || r.status === 'pending') {
+      console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' | SETTLED ✓')
+    } else if (r.status === 'delivered') {
+      const score = r.validationScore ? ' | score: ' + r.validationScore + '/100' : ''
+      const approved = r.approved ? ' | ✅ APPROVED' : ' | ❌ REJECTED'
+      console.log('  validator → coordinator | report delivered ✓' + score + approved)
+    } else {
+      console.log('  ' + JSON.stringify(r))
+    }
+  }
+
+  console.log('\n[WALLET BALANCES]')
+  const { ethers: ethersLib } = await import('ethers')
+  const balanceProvider = new ethersLib.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
+  const USDT_ABI = ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)']
+  const usdtContract = new ethersLib.Contract('0x186cca6904490818AB0DC409ca59D932A2366031', USDT_ABI, balanceProvider)
+  const usdtDecimals = await usdtContract.decimals()
+  const agentWallets = [
+    { name: 'scout-1',  address: '0x9858EfFD232B4033E47d90003D41EC34EcaEda94' },
+    { name: 'scout-2',  address: '0x6Fac4D18c912343BF86fa7049364Dd4E424Ab9C0' },
+    { name: 'scout-3',  address: '0xb6716976A3ebe8D39aCEB04372f22Ff8e6802D7A' },
+    { name: 'analyzer', address: '0xF3f50213C1d2e255e4B2bAD430F8A38EEF8D718E' },
+    { name: 'executor', address: '0x51cA8ff9f1C0a99f88E86B8112eA3237F55374cA' },
+    { name: 'validator',address: '0xA40cFBFc8534FFC84E20a7d8bBC3729B26a35F6f' },
+  ]
+  for (const agent of agentWallets) {
+    const balance = await usdtContract.balanceOf(agent.address)
+    console.log('  ' + agent.name + ' → ' + ethersLib.formatUnits(balance, usdtDecimals) + ' USDT')
+  }
+
+  console.log('\n[OK] Orchestration complete. Agent economy cycle finished.')
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

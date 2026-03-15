@@ -19,10 +19,22 @@ const ERC20_ABI = [
 ]
 
 const AGENT_INDEX = {
-  'data-fetcher': 0,
-  'analyzer': 1,
-  'executor': 2,
-  'coordinator': 3
+  'scout-1': 0,
+  'scout-2': 1,
+  'scout-3': 2,
+  'analyzer': 3,
+  'executor': 4,
+  'validator': 5,
+  'coordinator': 6
+}
+
+const AGENT_NAMES = {
+  'scout-1': '🔎 Scout Agent 1',
+  'scout-2': '🔎 Scout Agent 2',
+  'scout-3': '🔎 Scout Agent 3',
+  'analyzer': '🧠 Analyst Agent',
+  'executor': '⚡ Strategist Agent',
+  'validator': '✅ Validator Agent'
 }
 
 const TEST_SEED = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
@@ -39,12 +51,15 @@ async function initWDK() {
   return wdk
 }
 
-export async function assignWalletToAgent(agentIndex) {
+export async function assignWalletToAgent(agentType) {
   const instance = await initWDK()
-  const account = await instance.getAccount('ethereum', agentIndex)
+  const index = AGENT_INDEX[agentType]
+  if (index === undefined) throw new Error('Unknown agent type: ' + agentType)
+  const account = await instance.getAccount('ethereum', index)
   const address = await account.getAddress()
   return {
-    agentIndex,
+    agentType,
+    agentIndex: index,
     walletAddress: address,
     chain: 'ethereum-sepolia',
     status: 'funded-pending'
@@ -55,13 +70,8 @@ export async function assignWalletsToSubtasks(subtasks) {
   console.log('\n[ORCH] Spawning specialist agents...\n')
   const enriched = []
   for (let i = 0; i < subtasks.length; i++) {
-    const wallet = await assignWalletToAgent(i)
-    const names = {
-      'data-fetcher': '🔎 Scout Agent',
-      'analyzer': '🧠 Analyst Agent',
-      'executor': '⚡ Strategist Agent'
-    }
-    const displayName = names[subtasks[i].agentType] || subtasks[i].agentType
+    const wallet = await assignWalletToAgent(subtasks[i].agentType)
+    const displayName = AGENT_NAMES[subtasks[i].agentType] || subtasks[i].agentType
     console.log('[SPAWN] ' + displayName + ' created')
     console.log('        Wallet: ' + wallet.walletAddress)
     console.log('        Task:   ' + subtasks[i].task.slice(0, 60) + '...\n')
@@ -73,6 +83,14 @@ export async function assignWalletsToSubtasks(subtasks) {
     })
   }
   return enriched
+}
+
+export async function getWalletAddress(agentType) {
+  const instance = await initWDK()
+  const index = AGENT_INDEX[agentType]
+  if (index === undefined) throw new Error('Unknown agent type: ' + agentType)
+  const account = await instance.getAccount('ethereum', index)
+  return await account.getAddress()
 }
 
 export async function agentPay({ from, to, amount, reason }) {
@@ -128,3 +146,5 @@ export async function agentPay({ from, to, amount, reason }) {
     status: confirmed ? 'settled' : 'pending'
   }
 }
+
+export { AGENT_INDEX, AGENT_NAMES }
