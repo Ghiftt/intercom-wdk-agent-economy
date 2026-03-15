@@ -113,7 +113,7 @@ const economyResults = await runAgentEconomy(fundedSubtasks)
 console.log('\n[ECONOMY SUMMARY]')
 for (const r of economyResults) {
   if (r.status === 'settled' || r.status === 'pending') {
-    console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' ETH | SETTLED ✓')
+    console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' | SETTLED ✓')
   } else if (r.status === 'delivered') {
     console.log('  ' + r.from + ' → coordinator | report delivered ✓')
   } else {
@@ -124,14 +124,17 @@ for (const r of economyResults) {
 console.log('\n[WALLET BALANCES]')
 const { ethers: ethersLib } = await import('ethers')
 const balanceProvider = new ethersLib.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
+const USDT_ABI = ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)']
+const usdtContract = new ethersLib.Contract('0x186cca6904490818AB0DC409ca59D932A2366031', USDT_ABI, balanceProvider)
+const usdtDecimals = await usdtContract.decimals()
 const agentWallets = [
   { name: 'data-fetcher', address: '0x9858EfFD232B4033E47d90003D41EC34EcaEda94' },
   { name: 'analyzer', address: '0x6Fac4D18c912343BF86fa7049364Dd4E424Ab9C0' },
   { name: 'executor', address: '0xb6716976A3ebe8D39aCEB04372f22Ff8e6802D7A' },
 ]
 for (const agent of agentWallets) {
-  const balance = await balanceProvider.getBalance(agent.address)
-  console.log('  ' + agent.name + ' → ' + ethersLib.formatEther(balance) + ' ETH')
+  const balance = await usdtContract.balanceOf(agent.address)
+  console.log('  ' + agent.name + ' → ' + ethersLib.formatUnits(balance, usdtDecimals) + ' USDT')
 }
 
 console.log('\n[OK] Orchestration complete. Agent economy cycle finished.')

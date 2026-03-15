@@ -9,6 +9,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env') })
 
 const SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
+const USDT_CONTRACT = '0x186cca6904490818AB0DC409ca59D932A2366031'
+const USDT_PAYMENT = '0.05'
+
+const ERC20_ABI = [
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'function balanceOf(address account) view returns (uint256)',
+  'function decimals() view returns (uint8)'
+]
 
 const AGENT_INDEX = {
   'data-fetcher': 0,
@@ -44,17 +52,25 @@ export async function assignWalletToAgent(agentIndex) {
 }
 
 export async function assignWalletsToSubtasks(subtasks) {
-  console.log('[WDK] Assigning wallets to ' + subtasks.length + ' agents...')
+  console.log('\n[ORCH] Spawning specialist agents...\n')
   const enriched = []
   for (let i = 0; i < subtasks.length; i++) {
     const wallet = await assignWalletToAgent(i)
+    const names = {
+      'data-fetcher': '🔎 Scout Agent',
+      'analyzer': '🧠 Analyst Agent',
+      'executor': '⚡ Strategist Agent'
+    }
+    const displayName = names[subtasks[i].agentType] || subtasks[i].agentType
+    console.log('[SPAWN] ' + displayName + ' created')
+    console.log('        Wallet: ' + wallet.walletAddress)
+    console.log('        Task:   ' + subtasks[i].task.slice(0, 60) + '...\n')
     enriched.push({
       ...subtasks[i],
       wallet: wallet.walletAddress,
       chain: wallet.chain,
       paymentStatus: 'pending'
     })
-    console.log('[WDK] Agent #' + subtasks[i].id + ' [' + subtasks[i].agentType + '] -> ' + wallet.walletAddress)
   }
   return enriched
 }
@@ -74,30 +90,41 @@ export async function agentPay({ from, to, amount, reason }) {
   const toAccount = await instance.getAccount('ethereum', toIndex)
   const toAddress = await toAccount.getAddress()
 
-  console.log('[PAYMENT] ' + from + ' -> ' + to)
+  console.log('\n[PAYMENT] ' + from + ' → ' + to)
   console.log('  Reason: ' + reason)
-  console.log('  Amount: ' + amount + ' ETH')
+  console.log('  Amount: ' + USDT_PAYMENT + ' USDT')
   console.log('  From:   ' + fromAddress)
   console.log('  To:     ' + toAddress)
 
   const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC)
   const coordinator = new ethers.Wallet(process.env.COORDINATOR_PRIVATE_KEY, provider)
+  const usdt = new ethers.Contract(USDT_CONTRACT, ERC20_ABI, coordinator)
+
+  const decimals = await usdt.decimals()
+  const usdtAmount = ethers.parseUnits(USDT_PAYMENT, decimals)
 
   const tx = await coordinator.sendTransaction({
-    to: toAddress,
-    value: ethers.parseEther(amount)
+    to: USDT_CONTRACT,
+    data: usdt.interface.encodeFunctionData('transfer', [toAddress, usdtAmount])
   })
 
   console.log('  Tx:     ' + tx.hash)
-console.log('  View:   https://sepolia.etherscan.io/tx/' + tx.hash)
-console.log('  Verifying on-chain...')
+  console.log('  View:   https://sepolia.etherscan.io/tx/' + tx.hash)
 
-await new Promise(r => setTimeout(r, 12000))
-const receipt = await provider.getTransactionReceipt(tx.hash)
+  await new Promise(r => setTimeout(r, 12000))
+  const receipt = await provider.getTransactionReceipt(tx.hash)
+  const confirmed = receipt && receipt.status === 1
 
-const confirmed = receipt && receipt.status === 1
+  console.log('  Status: ' + (confirmed ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...') + '\n')
 
-console.log('  Status: ' + (confirmed ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...'))
-
-return { from, to, amount, reason, fromAddress, toAddress, txHash: tx.hash, status: confirmed ? 'settled' : 'pending' }
+  return {
+    from,
+    to,
+    amount: USDT_PAYMENT + ' USDT',
+    reason,
+    fromAddress,
+    toAddress,
+    txHash: tx.hash,
+    status: confirmed ? 'settled' : 'pending'
+  }
 }
