@@ -9,8 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env') })
 
 const SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com'
-const USDT_CONTRACT = '0x186cca6904490818AB0DC409ca59D932A2366031'
-const USDT_PAYMENT = '0.05'
+const USDT_CONTRACT = '0xe90a57A45F1Eae578F5aec8eed5bA8Fc6F55eF65'
+const USDT_PAYMENT = '1'
 
 const ERC20_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',

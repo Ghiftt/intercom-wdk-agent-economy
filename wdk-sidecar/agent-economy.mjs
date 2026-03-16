@@ -2,8 +2,60 @@ import { agentPay } from './wallet-service.mjs'
 import * as dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env') })
+
+const REPUTATION_FILE = resolve(__dirname, '../reputation.json')
+
+const PERSONALITIES = {
+  'scout-1': {
+    name: '🔎 Scout-1 "The Economist"',
+    bidStyle: { priceMin: 0.50, priceMax: 0.80, timeMin: 5, timeMax: 10, confidenceMin: 70, confidenceMax: 80 },
+    systemPrompt: 'You are The Economist — a cost-focused data scout. You bid low, work fast, and keep responses terse and data-driven. No fluff. Just facts and numbers.'
+  },
+  'scout-2': {
+    name: '🔎 Scout-2 "The Analyst"',
+    bidStyle: { priceMin: 0.80, priceMax: 1.20, timeMin: 10, timeMax: 18, confidenceMin: 80, confidenceMax: 92 },
+    systemPrompt: 'You are The Analyst — a thorough mid-range scout. You bid fairly, cite sources, explain reasoning, and produce well-structured research with clear methodology.'
+  },
+  'scout-3': {
+    name: '🔎 Scout-3 "The Hustler"',
+    bidStyle: { priceMin: 1.00, priceMax: 1.80, timeMin: 3, timeMax: 8, confidenceMin: 88, confidenceMax: 99 },
+    systemPrompt: 'You are The Hustler — aggressive, confident, fast. You bid high because you deliver results quickly. Sometimes miss detail but always sound certain.'
+  }
+}
+
+const AGENT_PROMPTS = {
+  analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly.',
+  executor: 'You are the Executor — action-oriented and structured. You produce clean, no-fluff reports with clear sections, bullet points, and actionable recommendations only.',
+  validator: 'You are the Validator — strict and scoring-focused. You give harsh but fair feedback. You approve only reports that fully address the goal with sufficient evidence.'
+}
+
+function loadReputation() {
+  if (!existsSync(REPUTATION_FILE)) {
+    return {
+      'scout-1': { wins: 0, totalScore: 0, runs: 0, personality: 'The Economist' },
+      'scout-2': { wins: 0, totalScore: 0, runs: 0, personality: 'The Analyst' },
+      'scout-3': { wins: 0, totalScore: 0, runs: 0, personality: 'The Hustler' }
+    }
+  }
+  return JSON.parse(readFileSync(REPUTATION_FILE, 'utf8'))
+}
+
+function saveReputation(rep) {
+  writeFileSync(REPUTATION_FILE, JSON.stringify(rep, null, 2))
+}
+
+function displayReputation(rep) {
+  console.log('\n[REPUTATION] 🏆 Scout Leaderboard:')
+  const sorted = Object.entries(rep).sort((a, b) => b[1].wins - a[1].wins)
+  for (const [id, r] of sorted) {
+    const avgScore = r.runs > 0 ? (r.totalScore / r.runs).toFixed(1) : 'N/A'
+    console.log('  ' + PERSONALITIES[id].name + ' | wins: ' + r.wins + ' | avg validator score: ' + avgScore + ' | runs: ' + r.runs)
+  }
+}
 
 async function getGroq() {
   const Groq = (await import('groq-sdk')).default
@@ -13,28 +65,26 @@ async function getGroq() {
 async function runScoutBidding(task) {
   console.log('\n[BIDDING] 3 Scout agents competing for the data-fetching task...\n')
 
-  const scouts = [
-    { id: 'scout-1', name: '🔎 Scout Agent 1' },
-    { id: 'scout-2', name: '🔎 Scout Agent 2' },
-    { id: 'scout-3', name: '🔎 Scout Agent 3' }
-  ]
+  const reputation = loadReputation()
 
-  const bids = scouts.map(scout => {
-    const price = (Math.random() * 0.08 + 0.02).toFixed(4)
-    const time = Math.floor(Math.random() * 20 + 5)
-    const confidence = Math.floor(Math.random() * 30 + 70)
-    return { ...scout, bid: { price, estimatedTime: time, confidence } }
+  const bids = Object.entries(PERSONALITIES).map(([id, p]) => {
+    const b = p.bidStyle
+    const price = (Math.random() * (b.priceMax - b.priceMin) + b.priceMin).toFixed(4)
+    const time = Math.floor(Math.random() * (b.timeMax - b.timeMin) + b.timeMin)
+    const confidence = Math.floor(Math.random() * (b.confidenceMax - b.confidenceMin) + b.confidenceMin)
+    const wins = reputation[id]?.wins || 0
+    return { id, name: p.name, bid: { price, estimatedTime: time, confidence }, wins }
   })
 
   console.log('[BIDDING] Bids received:')
   for (const s of bids) {
-    console.log('  ' + s.name + ' → $' + s.bid.price + ' USDT | ' + s.bid.estimatedTime + 's | confidence: ' + s.bid.confidence + '%')
+    console.log('  ' + s.name + ' → $' + s.bid.price + ' USDT | ' + s.bid.estimatedTime + 's | confidence: ' + s.bid.confidence + '% | wins: ' + s.wins)
   }
 
   console.log('\n[BIDDING] Asking Groq to evaluate bids...')
   const groq = await getGroq()
   const bidSummary = bids.map(s =>
-    s.id + ': price=$' + s.bid.price + ' USDT, estimatedTime=' + s.bid.estimatedTime + 's, confidence=' + s.bid.confidence + '%'
+    s.id + ' (' + PERSONALITIES[s.id].name.replace(/🔎 /, '') + '): price=$' + s.bid.price + ' USDT, estimatedTime=' + s.bid.estimatedTime + 's, confidence=' + s.bid.confidence + '%, pastWins=' + s.wins
   ).join('\n')
 
   const response = await groq.chat.completions.create({
@@ -42,7 +92,7 @@ async function runScoutBidding(task) {
     messages: [
       {
         role: 'system',
-        content: 'You are an AI agent coordinator. Given 3 agent bids for a task, select the best agent based on value (not just lowest price — consider confidence and speed too). Respond ONLY with a JSON object like: {"winner":"scout-1","reason":"one sentence explanation"}'
+        content: 'You are an AI agent coordinator selecting the best scout for a task. Consider price, speed, confidence, and past wins. Respond ONLY with JSON: {"winner":"scout-1","reason":"one sentence"}'
       },
       {
         role: 'user',
@@ -61,7 +111,7 @@ async function runScoutBidding(task) {
   console.log('[BIDDING] Reason: ' + decision.reason)
   console.log('[BIDDING] Winning bid: $' + winner.bid.price + ' USDT\n')
 
-  return winner
+  return { ...winner, reason: decision.reason }
 }
 
 async function runValidator(report, goal) {
@@ -73,7 +123,7 @@ async function runValidator(report, goal) {
     messages: [
       {
         role: 'system',
-        content: 'You are a validator agent. Review the report and check if it adequately addresses the goal. Respond ONLY with JSON: {"approved":true/false,"score":0-100,"feedback":"one sentence"}'
+        content: AGENT_PROMPTS.validator + ' Respond ONLY with JSON: {"approved":true/false,"score":0-100,"feedback":"one sentence"}'
       },
       {
         role: 'user',
@@ -81,7 +131,7 @@ async function runValidator(report, goal) {
       }
     ],
     temperature: 0.2,
-    max_tokens: 100
+    max_tokens: 150
   })
 
   const raw = response.choices[0].message.content.trim().replace(/```json|```/g, '').trim()
@@ -97,10 +147,18 @@ async function runValidator(report, goal) {
 export async function runAgentEconomy(fundedSubtasks, goal) {
   console.log('\n[ECONOMY] Agent economy starting...\n')
   const results = []
+  const reputation = loadReputation()
 
   // Step 1 — Scout bidding
   const dataTask = fundedSubtasks.find(s => s.agentType === 'analyzer')?.task || goal
   const winner = await runScoutBidding(dataTask)
+
+  // Update reputation — all scouts ran
+  for (const id of ['scout-1', 'scout-2', 'scout-3']) {
+    reputation[id].runs += 1
+  }
+  reputation[winner.id].wins += 1
+  saveReputation(reputation)
 
   // Pay winning scout
   const scoutPayResult = await agentPay({
@@ -126,7 +184,7 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
     results.push(analyzerPayResult)
   }
 
-  // Step 3 — Executor generates report
+  // Step 3 — Executor generates report with personality
   const executorTask = fundedSubtasks.find(s => s.agentType === 'executor')
   let report = ''
   if (executorTask) {
@@ -142,7 +200,7 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
         messages: [
           {
             role: 'system',
-            content: 'You are a DeFi research agent. Generate a concise, structured report based on the goal provided. Include specific protocols, metrics, and actionable recommendations. Keep it under 200 words. Format with clear sections.'
+            content: AGENT_PROMPTS.executor + ' Generate a concise structured report under 200 words with clear sections, specific protocols, metrics, and actionable recommendations.'
           },
           {
             role: 'user',
@@ -165,6 +223,10 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
   // Step 4 — Validator reviews report and gets paid
   const validation = await runValidator(report, goal)
 
+  // Update reputation with validator score
+  reputation[winner.id].totalScore += validation.score
+  saveReputation(reputation)
+
   const validatorPayResult = await agentPay({
     from: 'executor',
     to: 'validator',
@@ -174,12 +236,19 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
 
   console.log('[AGENT:validator] Payment received. Validation complete ✓\n')
 
+  // Display leaderboard
+  displayReputation(reputation)
+
   results.push({
     from: 'validator',
     to: 'coordinator',
     status: 'delivered',
     validationScore: validation.score,
-    approved: validation.approved
+    validatorFeedback: validation.feedback,
+    approved: validation.approved,
+    winningScout: winner.name,
+    winningReason: winner.reason,
+    reputation
   })
 
   return results
