@@ -1,0 +1,20 @@
+{
+  "scout-1": {
+    "wins": 0,
+    "totalScore": 0,
+    "runs": 1,
+    "personality": "The Economist"
+  },
+  "scout-2": {
+    "wins": 0,
+    "totalScore": 0,
+    "runs": 1,
+    "personality": "The Analyst"
+  },
+  "scout-3": {
+    "wins": 1,
+    "totalScore": 90,
+    "runs": 1,
+    "personality": "The Hustler"
+  }
+}
