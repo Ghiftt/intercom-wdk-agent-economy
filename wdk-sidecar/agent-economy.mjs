@@ -52,7 +52,7 @@ function displayReputation(rep) {
   console.log('\n[REPUTATION] 🏆 Scout Leaderboard:')
   const sorted = Object.entries(rep).sort((a, b) => b[1].wins - a[1].wins)
   for (const [id, r] of sorted) {
-    const avgScore = r.runs > 0 ? (r.totalScore / r.runs).toFixed(1) : 'N/A'
+    const avgScore = r.wins > 0 ? (r.totalScore / r.wins).toFixed(1) : 'N/A'
     console.log('  ' + PERSONALITIES[id].name + ' | wins: ' + r.wins + ' | avg validator score: ' + avgScore + ' | runs: ' + r.runs)
   }
 }
