@@ -1,4 +1,5 @@
 import Hyperswarm from 'hyperswarm'
+import { spawn } from 'child_process'
 import crypto from 'crypto'
 import readline from 'readline'
 import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
@@ -55,24 +56,94 @@ Respond ONLY with a JSON array, no explanation. Example:
   }
 }
 
-async function broadcastSubtasks(goal, subtasks) {
-  const topic = crypto.createHash('sha256').update('intercom-ai-orchestrator-v1').digest()
-  const swarm = new Hyperswarm()
-  swarm.on('connection', (conn, info) => {
-    const peerId = info.publicKey.toString('hex').slice(0,12)
-    console.log('[P2P] Peer connected: ' + peerId)
-    for (const subtask of subtasks) {
-      conn.write(JSON.stringify({ type:'orchestrator_task', version:ORCHESTRATOR_VERSION, goal, subtask, timestamp:Date.now() }))
-      console.log('[TASK] broadcast task #' + subtask.id + ' [' + subtask.agentType + '] to ' + peerId)
-    }
-    conn.on('error', ()=>{})
-  })
-  await swarm.join(topic, { server:true, client:true })
-  console.log('[P2P] Listening on sidechannel. Waiting 8s for peers...')
-  await new Promise(r => setTimeout(r, 8000))
-  await swarm.destroy()
-}
+async function dispatchToAgent(agentType, taskId, payload) {
+  return new Promise(async (resolve) => {
+    const topic = crypto.createHash('sha256').update('intercom-ai-orchestrator-v1').digest()
+    const swarm = new Hyperswarm()
+    let settled = false
+    let agentProcess = null
 
+    const cleanup = async () => {
+      if (agentProcess) agentProcess.kill()
+      try { await swarm.destroy() } catch(e) {}
+    }
+
+    const timeout = setTimeout(async () => {
+      if (!settled) {
+        settled = true
+        console.log('[P2P] Agent ' + agentType + ' timed out')
+        await cleanup()
+        resolve(null)
+      }
+    }, 90000)
+
+    swarm.on('connection', (conn) => {
+      console.log('[P2P] Agent ' + agentType + ' connected')
+
+      conn.on('data', async (data) => {
+        try {
+          const msg = JSON.parse(data.toString())
+
+          if (msg.type === 'agent_ready') {
+            console.log('[P2P] Agent ' + agentType + ' ready — sending task...')
+            conn.write(JSON.stringify({ type: 'task', taskId, payload }))
+          }
+
+          if (msg.type === 'result') {
+            if (!settled) {
+              settled = true
+              clearTimeout(timeout)
+              console.log('[P2P] Agent ' + agentType + ' result received ✓')
+              await cleanup()
+              resolve({
+                agentType,
+                output: msg.output,
+                outputHash: msg.outputHash,
+                wallet: msg.wallet,
+                taskId: msg.taskId
+              })
+            }
+          }
+        } catch (e) {
+          console.error('[P2P] Parse error: ' + e.message)
+        }
+      })
+
+      conn.on('error', () => {})
+    })
+
+    await swarm.join(topic, { server: true, client: false })
+    console.log('[P2P] Orchestrator ready — waiting for DHT propagation...')
+    await new Promise(r => setTimeout(r, 3000))
+    console.log('[P2P] Spawning ' + agentType + '...')
+
+    agentProcess = spawn('node', ['wdk-sidecar/agent.mjs', '--type=' + agentType], {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+      env: process.env
+    })
+
+    agentProcess.on('error', async (err) => {
+      if (!settled) {
+        settled = true
+        clearTimeout(timeout)
+        console.log('[P2P] Agent ' + agentType + ' spawn error: ' + err.message)
+        await cleanup()
+        resolve(null)
+      }
+    })
+
+    agentProcess.on('exit', async (code) => {
+      if (!settled && code !== 0) {
+        settled = true
+        clearTimeout(timeout)
+        console.log('[P2P] Agent ' + agentType + ' exited with code ' + code)
+        await cleanup()
+        resolve(null)
+      }
+    })
+  })
+}
 async function main() {
   console.log('\n==== Intercom AI Agent Task Orchestrator ====')
   console.log('     Built on Trac Network v' + ORCHESTRATOR_VERSION)
@@ -108,8 +179,19 @@ async function main() {
     console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + (s.funded ? 'FUNDED ✓ ' + s.txHash : 'FAILED ✗'))
   }
 
-  console.log('\n[ORCH] Broadcasting ' + fundedSubtasks.length + ' subtasks over Intercom sidechannel...')
-  await broadcastSubtasks(goal, fundedSubtasks)
+  console.log('\n[ORCH] Dispatching subtasks to agents over P2P...')
+  const p2pResults = {}
+  for (const subtask of fundedSubtasks) {
+    console.log('[P2P] Dispatching to ' + subtask.agentType + '...')
+    const result = await dispatchToAgent(subtask.agentType, String(subtask.id), subtask.task)
+    if (result) {
+      p2pResults[subtask.agentType] = result
+      console.log('[P2P] ' + subtask.agentType + ' completed task ✓')
+      console.log('[P2P] Output hash: ' + result.outputHash)
+    } else {
+      console.log('[P2P] ' + subtask.agentType + ' failed or timed out')
+    }
+  }
 
   console.log('\n[ORCH] Running agent economy — scouts bidding, agents paying each other...')
   const economyResults = await runAgentEconomy(fundedSubtasks, goal)

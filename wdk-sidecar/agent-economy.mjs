@@ -28,9 +28,9 @@ const PERSONALITIES = {
 }
 
 const AGENT_PROMPTS = {
-  analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly.',
-  executor: 'You are the Executor — action-oriented and structured. You produce clean, no-fluff reports with clear sections, bullet points, and actionable recommendations only.',
-  validator: 'You are the Validator — strict and scoring-focused. You give harsh but fair feedback. You approve only reports that fully address the goal with sufficient evidence.'
+  analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly with key findings, data points, and identified patterns.',
+  executor: 'You are the Executor — action-oriented and structured. You receive analyzed data and produce clean professional reports with clear sections, specific metrics, and actionable recommendations. No fluff.',
+  validator: 'You are the Validator — strict and scoring-focused. You give harsh but fair feedback. You approve only reports that fully address the goal with sufficient evidence and specific data.'
 }
 
 function loadReputation() {
@@ -92,7 +92,7 @@ async function runScoutBidding(task) {
     messages: [
       {
         role: 'system',
-        content: 'You are an AI agent coordinator selecting the best scout for a task. Consider price, speed, confidence, and past wins. Respond ONLY with JSON: {"winner":"scout-1","reason":"one sentence"}'
+        content: 'You are an AI agent coordinator selecting the best scout for a task. Score each agent using these weights: price (40%) — lower is better, confidence (30%) — higher is better, speed (20%) — faster is better, past wins (10%) — penalize repeat winners to keep competition fair. Pick the best overall value, not just the most confident. Respond ONLY with JSON: {"winner":"scout-1","reason":"one sentence"}'
       },
       {
         role: 'user',
@@ -114,6 +114,32 @@ async function runScoutBidding(task) {
   return { ...winner, reason: decision.reason }
 }
 
+async function runAnalyzer(task, goal, winningScout) {
+  console.log('[AGENT:analyzer] Running deep analysis with web search + Groq...')
+  const groq = await getGroq()
+
+  const response = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      {
+        role: 'system',
+        content: AGENT_PROMPTS.analyzer
+      },
+      {
+        role: 'user',
+        content: 'Goal: ' + goal + '\n\nSearch the web for current data then analyze thoroughly. Include:\n- Specific protocol names, current APYs, TVL figures\n- Real risks and considerations\n- Market context and trends\n- Flag any data you are uncertain about\n\nTask: ' + task
+      }
+    ],
+
+    temperature: 0.3,
+    max_tokens: 800
+  })
+
+  const analysis = response.choices?.[0]?.message?.content?.trim() || 'Analysis unavailable'
+
+  console.log('[AGENT:analyzer] Analysis complete - passing to executor\n')
+  return analysis
+}
 async function runValidator(report, goal) {
   console.log('\n[VALIDATOR] ✅ Validator Agent reviewing output...')
   const groq = await getGroq()
@@ -123,7 +149,7 @@ async function runValidator(report, goal) {
     messages: [
       {
         role: 'system',
-        content: AGENT_PROMPTS.validator + ' Respond ONLY with JSON: {"approved":true/false,"score":0-100,"feedback":"one sentence"}'
+        content: AGENT_PROMPTS.validator + ' Respond ONLY with JSON: {"approved":true/false,"score":0-100,"feedback":"two sentences max"}'
       },
       {
         role: 'user',
@@ -168,13 +194,12 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
   })
   results.push(scoutPayResult)
 
-  // Step 2 — Analyzer works and pays executor
+  // Step 2 — Analyzer does real Groq analysis and pays executor
   const analyzerTask = fundedSubtasks.find(s => s.agentType === 'analyzer')
+  let analysis = ''
   if (analyzerTask) {
-    console.log('[AGENT:analyzer] Payment received. Analyzing data...')
-    console.log('[AGENT:analyzer] ' + analyzerTask.task.slice(0, 70) + '...')
-    await new Promise(r => setTimeout(r, 1000))
-    console.log('[AGENT:analyzer] Analysis complete\n')
+    console.log('[AGENT:analyzer] Payment received. Starting deep analysis...')
+    analysis = await runAnalyzer(analyzerTask.task, goal, winner.name)
 
     const analyzerPayResult = await agentPay({
       from: 'analyzer',
@@ -184,13 +209,12 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
     results.push(analyzerPayResult)
   }
 
-  // Step 3 — Executor generates report with personality
+  // Step 3 — Executor builds report from analyzer output
   const executorTask = fundedSubtasks.find(s => s.agentType === 'executor')
   let report = ''
   if (executorTask) {
-    console.log('[AGENT:executor] Payment received. Generating final report...')
+    console.log('[AGENT:executor] Payment received. Generating final report from analysis...')
     console.log('[AGENT:executor] ' + executorTask.task.slice(0, 70) + '...')
-    await new Promise(r => setTimeout(r, 1000))
 
     console.log('\n[REPORT] Generating report with Groq Llama 3...')
     try {
@@ -200,15 +224,15 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
         messages: [
           {
             role: 'system',
-            content: AGENT_PROMPTS.executor + ' Generate a concise structured report under 200 words with clear sections, specific protocols, metrics, and actionable recommendations.'
+            content: AGENT_PROMPTS.executor + ' Generate a professional structured report of 500-600 words. Use the analyzer\'s findings as your foundation. Include: executive summary, key findings with specific data, protocol/asset details, risk considerations, and concrete recommendations.'
           },
           {
             role: 'user',
-            content: 'Generate a report for this goal: ' + executorTask.task
+            content: 'Goal: ' + goal + '\n\nAnalyzer findings:\n' + analysis + '\n\nNow produce the final report.'
           }
         ],
         temperature: 0.4,
-        max_tokens: 400
+        max_tokens: 900
       })
       report = reportResponse.choices[0].message.content.trim()
       console.log('\n[REPORT] ================================')
@@ -227,12 +251,20 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
   reputation[winner.id].totalScore += validation.score
   saveReputation(reputation)
 
-  const validatorPayResult = await agentPay({
-    from: 'executor',
-    to: 'validator',
-    reason: 'validation service fee'
-  })
-  results.push(validatorPayResult)
+  let validatorPayResult
+  if (validation.approved && validation.score >= 60) {
+    console.log('[PAYMENT] ✅ Score ' + validation.score + '/100 — APPROVED. Releasing payment to agents...')
+    validatorPayResult = await agentPay({
+      from: 'executor',
+      to: 'validator',
+      reason: 'validation service fee — score ' + validation.score + '/100'
+    })
+    results.push(validatorPayResult)
+  } else {
+    console.log('[PAYMENT] ❌ Score ' + validation.score + '/100 — REJECTED. Payment BLOCKED.')
+    validatorPayResult = { status: 'blocked', reason: 'score below threshold', score: validation.score }
+    results.push(validatorPayResult)
+  }
 
   console.log('[AGENT:validator] Payment received. Validation complete ✓\n')
 

@@ -96,6 +96,7 @@ async function main() {
         const msg = JSON.parse(data.toString())
         if (msg.type !== 'task' || taskReceived) return
         taskReceived = true
+        const receivedTaskId = msg.taskId
 
         console.log('[AGENT:' + AGENT_TYPE + '] Task received: ' + msg.payload.slice(0, 60) + '...')
         console.log('[AGENT:' + AGENT_TYPE + '] Working...')
@@ -112,14 +113,16 @@ async function main() {
         conn.write(JSON.stringify({
           type: 'result',
           agent: AGENT_TYPE,
-          taskId: msg.taskId,
+          taskId: receivedTaskId,
           output,
           outputHash,
           wallet: address,
           timestamp: Date.now()
         }))
 
-        console.log('[AGENT:' + AGENT_TYPE + '] Result sent. Exiting.')
+        console.log('[AGENT:' + AGENT_TYPE + '] Result sent. Waiting 5s...')
+        await new Promise(r => setTimeout(r, 5000))
+        console.log('[AGENT:' + AGENT_TYPE + '] Exiting.')
         await swarm.destroy()
         process.exit(0)
 
@@ -143,7 +146,7 @@ async function main() {
       await swarm.destroy()
       process.exit(1)
     }
-  }, 60000)
+  }, 120000)
 
   process.on('SIGINT', async () => {
     await swarm.destroy()
