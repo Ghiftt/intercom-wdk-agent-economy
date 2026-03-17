@@ -3,7 +3,6 @@ import { spawn } from 'child_process'
 import crypto from 'crypto'
 import readline from 'readline'
 import { assignWalletsToSubtasks } from '../wdk-sidecar/wallet-service.mjs'
-import { fundAgentWallets } from '../wdk-sidecar/fund-agents.mjs'
 import { runAgentEconomy } from '../wdk-sidecar/agent-economy.mjs'
 
 import Groq from 'groq-sdk'
@@ -171,17 +170,9 @@ async function main() {
     console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + s.wallet)
   }
 
-  console.log('\n[ORCH] Funding agent wallets on Sepolia...')
-  const fundedSubtasks = await fundAgentWallets(enrichedSubtasks)
-
-  console.log('\n[FUND SUMMARY]')
-  for (const s of fundedSubtasks) {
-    console.log('  Agent #' + s.id + ' [' + s.agentType + '] → ' + (s.funded ? 'FUNDED ✓ ' + s.txHash : 'FAILED ✗'))
-  }
-
   console.log('\n[ORCH] Dispatching subtasks to agents over P2P...')
   const p2pResults = {}
-  for (const subtask of fundedSubtasks) {
+  for (const subtask of enrichedSubtasks) {
     console.log('[P2P] Dispatching to ' + subtask.agentType + '...')
     const result = await dispatchToAgent(subtask.agentType, String(subtask.id), subtask.task)
     if (result) {
@@ -194,7 +185,7 @@ async function main() {
   }
 
   console.log('\n[ORCH] Running agent economy — scouts bidding, agents paying each other...')
-  const economyResults = await runAgentEconomy(fundedSubtasks, goal)
+  const economyResults = await runAgentEconomy(enrichedSubtasks, goal)
 
   console.log('\n[ECONOMY SUMMARY]')
   for (const r of economyResults) {
