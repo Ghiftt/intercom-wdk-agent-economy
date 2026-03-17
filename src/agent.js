@@ -46,7 +46,7 @@ async function getWallet() {
   if (index === undefined) throw new Error('Unknown agent type: ' + AGENT_TYPE)
   const account = await wdk.getAccount('ethereum', index)
   const address = await account.getAddress()
-  return { address, index }
+  return { address, index, account }
 }
 
 async function callGroq(task) {
@@ -73,7 +73,7 @@ function signOutput(output, privateKey) {
 async function main() {
   console.log('[AGENT:' + AGENT_TYPE + '] Starting...')
 
-  const { address } = await getWallet()
+  const { address, account } = await getWallet()
   console.log('[AGENT:' + AGENT_TYPE + '] Wallet: ' + address)
 
   const topic = crypto.createHash('sha256').update('intercom-ai-orchestrator-v1').digest()
@@ -103,18 +103,21 @@ async function main() {
         // Do real Groq work
         const output = await callGroq(msg.payload)
 
-        // Sign the output
+        // Sign the output with WDK wallet
         const outputHash = ethers.id(output)
+        const signature = await account.sign(outputHash)
         console.log('[AGENT:' + AGENT_TYPE + '] Output hash: ' + outputHash)
+        console.log('[AGENT:' + AGENT_TYPE + '] Signed with WDK wallet ✓')
         console.log('[AGENT:' + AGENT_TYPE + '] Work complete. Sending result...')
 
-        // Send result back
+        // Send result back with signature
         conn.write(JSON.stringify({
           type: 'result',
           agent: AGENT_TYPE,
           taskId: msg.taskId,
           output,
           outputHash,
+          signature,
           wallet: address,
           timestamp: Date.now()
         }))
