@@ -2,21 +2,21 @@
   "scout-1": {
     "wins": 6,
     "totalScore": 337,
-    "runs": 13,
+    "runs": 14,
     "personality": "The Economist",
     "banned": true
   },
   "scout-2": {
     "wins": 3,
     "totalScore": 185,
-    "runs": 13,
+    "runs": 14,
     "personality": "The Analyst",
     "banned": true
   },
   "scout-3": {
     "wins": 2,
     "totalScore": 60,
-    "runs": 13,
+    "runs": 14,
     "personality": "The Hustler",
     "banned": true
   },
@@ -31,9 +31,9 @@
     "runs": 1
   },
   "scout-4": {
-    "wins": 2,
-    "totalScore": 179,
-    "runs": 0,
+    "wins": 3,
+    "totalScore": 271,
+    "runs": 1,
     "personality": "The Newcomer",
     "banned": false
   }
