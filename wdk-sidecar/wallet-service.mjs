@@ -25,6 +25,7 @@ const AGENT_INDEX = {
   'analyzer': 3,
   'executor': 4,
   'validator': 5,
+  'scout-4': 7,
   'coordinator': 6
 }
 
@@ -34,7 +35,9 @@ const AGENT_NAMES = {
   'scout-3': '🔎 Scout Agent 3',
   'analyzer': '🧠 Analyst Agent',
   'executor': '⚡ Strategist Agent',
-  'validator': '✅ Validator Agent'
+  'validator': '✅ Validator Agent',
+  'scout-4': '🔎 Scout Agent 4 (New)'
+
 }
 
 const TEST_SEED = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'

@@ -24,6 +24,11 @@ const PERSONALITIES = {
     name: '🔎 Scout-3 "The Hustler"',
     bidStyle: { priceMin: 1.00, priceMax: 1.80, timeMin: 3, timeMax: 8, confidenceMin: 88, confidenceMax: 99 },
     systemPrompt: 'You are The Hustler — aggressive, confident, fast. You bid high because you deliver results quickly. Sometimes miss detail but always sound certain.'
+  },
+  'scout-4': {
+    name: '🔎 Scout-4 "The Newcomer"',
+    bidStyle: { priceMin: 0.30, priceMax: 0.60, timeMin: 8, timeMax: 15, confidenceMin: 65, confidenceMax: 80 },
+    systemPrompt: 'You are The Newcomer — eager to prove yourself. You bid low to win work, are thorough and careful, and never overstate your confidence.'
   }
 }
 
@@ -67,7 +72,24 @@ async function runScoutBidding(task) {
 
   const reputation = loadReputation()
 
-  const bids = Object.entries(PERSONALITIES).map(([id, p]) => {
+  // Filter out banned scouts
+  const activeScouts = Object.entries(PERSONALITIES).filter(([id]) => {
+    const r = reputation[id]
+    if (r && r.banned) {
+      console.log('[BANNED] ' + id + ' is excluded from bidding ❌')
+      return false
+    }
+    return true
+  })
+
+  if (activeScouts.length === 0) {
+    console.log('[BIDDING] No active scouts available — all banned')
+    throw new Error('No active scouts available')
+  }
+
+  console.log('[BIDDING] ' + activeScouts.length + ' scout(s) eligible to bid\n')
+
+  const bids = activeScouts.map(([id, p]) => {
     const b = p.bidStyle
     const price = (Math.random() * (b.priceMax - b.priceMin) + b.priceMin).toFixed(4)
     const time = Math.floor(Math.random() * (b.timeMax - b.timeMin) + b.timeMin)
@@ -271,6 +293,46 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
     results.push(validatorPayResult)
   } else {
     console.log('[PAYMENT] ❌ Score ' + validation.score + '/100 — REJECTED. Payment BLOCKED.')
+
+    // Reputation penalty on rejection
+    console.log('\n[REPUTATION] Applying penalties for failed work...')
+    const PENALTY = 15
+    if (reputation[winner.id]) {
+      const oldScore = reputation[winner.id].totalScore
+      reputation[winner.id].totalScore = Math.max(0, oldScore - PENALTY)
+      console.log('[REPUTATION] ' + winner.id + ' penalized -' + PENALTY + ' reputation points')
+    }
+    // Penalize analyzer and executor
+    for (const agentId of ['analyzer', 'executor']) {
+      if (!reputation[agentId]) reputation[agentId] = { wins: 0, totalScore: 100, runs: 0 }
+      reputation[agentId].totalScore = Math.max(0, reputation[agentId].totalScore - PENALTY)
+      reputation[agentId].runs = (reputation[agentId].runs || 0) + 1
+      console.log('[REPUTATION] ' + agentId + ' penalized -' + PENALTY + ' → score: ' + reputation[agentId].totalScore)
+    }
+    saveReputation(reputation)
+
+    // Check for bans
+    for (const [id, r] of Object.entries(reputation)) {
+      const repScore = r.runs > 0 ? r.totalScore / r.runs : 100
+      if (repScore < 40 && !r.banned) {
+        reputation[id].banned = true
+        saveReputation(reputation)
+        console.log('[BANNED] ' + id + ' reputation ' + repScore.toFixed(1) + ' — EXCLUDED from future rounds ❌')
+      }
+    }
+
+    // Auto-spawn replacement scout if needed
+    const activeScouting = ['scout-1', 'scout-2', 'scout-3', 'scout-4'].filter(id => !reputation[id]?.banned)
+    if (activeScouting.length < 2 && !reputation['scout-4']?.banned) {
+      if (!reputation['scout-4']) {
+        reputation['scout-4'] = { wins: 0, totalScore: 0, runs: 0, personality: 'The Newcomer', banned: false }
+        saveReputation(reputation)
+        console.log('\n[SPAWN] 🆕 Scout-4 "The Newcomer" joined the marketplace')
+        console.log('[SPAWN] Wallet: 0xB191a13bfE648B61002F2e2135867015B71816a6')
+        console.log('[SPAWN] Reputation: 0 — must prove itself\n')
+      }
+    }
+
     // Escrow refund — send 2 USDT back to user
     const refundTarget = userWallet && userWallet.length === 42 ? userWallet : null
     if (refundTarget) {
