@@ -55,7 +55,10 @@ function saveReputation(rep) {
 
 function displayReputation(rep) {
   console.log('\n[REPUTATION] 🏆 Scout Leaderboard:')
-  const sorted = Object.entries(rep).sort((a, b) => b[1].wins - a[1].wins)
+  const scoutIds = ['scout-1', 'scout-2', 'scout-3', 'scout-4']
+  const sorted = Object.entries(rep)
+    .filter(([id]) => scoutIds.includes(id))
+    .sort((a, b) => b[1].wins - a[1].wins)
   for (const [id, r] of sorted) {
     const avgScore = r.wins > 0 ? (r.totalScore / r.wins).toFixed(1) : 'N/A'
     console.log('  ' + PERSONALITIES[id].name + ' | wins: ' + r.wins + ' | avg validator score: ' + avgScore + ' | runs: ' + r.runs)
@@ -209,8 +212,8 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
   const winner = await runScoutBidding(dataTask)
 
   // Update reputation — all scouts ran
-  for (const id of ['scout-1', 'scout-2', 'scout-3']) {
-    reputation[id].runs += 1
+  for (const id of ['scout-1', 'scout-2', 'scout-3', 'scout-4']) {
+    if (reputation[id]) reputation[id].runs += 1
   }
   reputation[winner.id].wins += 1
   saveReputation(reputation)
