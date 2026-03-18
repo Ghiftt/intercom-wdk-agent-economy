@@ -1,41 +1,39 @@
 {
   "scout-1": {
-    "wins": 6,
-    "totalScore": 337,
-    "runs": 18,
+    "wins": 1,
+    "totalScore": 17,
+    "runs": 1,
     "personality": "The Economist",
     "banned": true
   },
   "scout-2": {
-    "wins": 3,
-    "totalScore": 185,
-    "runs": 18,
+    "wins": 0,
+    "totalScore": 0,
+    "runs": 1,
     "personality": "The Analyst",
     "banned": true
   },
   "scout-3": {
-    "wins": 2,
-    "totalScore": 60,
-    "runs": 18,
+    "wins": 0,
+    "totalScore": 0,
+    "runs": 1,
     "personality": "The Hustler",
     "banned": true
   },
   "analyzer": {
     "wins": 0,
-    "totalScore": 40,
-    "runs": 4,
-    "banned": true
+    "totalScore": 85,
+    "runs": 1
   },
   "executor": {
     "wins": 0,
-    "totalScore": 40,
-    "runs": 4,
-    "banned": true
+    "totalScore": 85,
+    "runs": 1
   },
   "scout-4": {
-    "wins": 7,
-    "totalScore": 433,
-    "runs": 5,
+    "wins": 0,
+    "totalScore": 0,
+    "runs": 0,
     "personality": "The Newcomer",
     "banned": false
   }
