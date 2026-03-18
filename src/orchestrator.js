@@ -189,7 +189,7 @@ async function main() {
   console.log('\n[ORCH] Running agent economy — scouts bidding, agents paying each other...')
   const economyResults = await runAgentEconomy(enrichedSubtasks, goal, userWallet)
 
-  console.log('\n[ECONOMY SUMMARY]')
+  console.log("\n[ECONOMY SUMMARY]"); 
   for (const r of economyResults) {
     if (r.status === 'settled' || r.status === 'pending') {
       console.log('  ' + r.from + ' → ' + r.to + ' | ' + r.amount + ' | SETTLED ✓')

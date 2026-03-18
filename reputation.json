@@ -2,19 +2,19 @@
   "scout-1": {
     "wins": 4,
     "totalScore": 265,
-    "runs": 8,
+    "runs": 9,
     "personality": "The Economist"
   },
   "scout-2": {
-    "wins": 2,
+    "wins": 3,
     "totalScore": 185,
-    "runs": 8,
+    "runs": 9,
     "personality": "The Analyst"
   },
   "scout-3": {
     "wins": 2,
     "totalScore": 60,
-    "runs": 8,
+    "runs": 9,
     "personality": "The Hustler"
   }
 }
