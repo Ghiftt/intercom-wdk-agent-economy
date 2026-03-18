@@ -194,23 +194,6 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
   })
   results.push(scoutPayResult)
 
-  // Step 1.5 — Collect stakes from analyzer and executor
-  console.log('\n[STAKE] Collecting agent stakes before work begins...')
-  const STAKE_AMOUNT = '1'
-  const analyzerStakeTx = await agentPay({
-    from: 'analyzer',
-    to: 'coordinator',
-    reason: 'stake — held until validation'
-  })
-  console.log('[STAKE] Analyzer staked 1 USDT ✓')
-
-  const executorStakeTx = await agentPay({
-    from: 'executor',
-    to: 'coordinator',
-    reason: 'stake — held until validation'
-  })
-  console.log('[STAKE] Executor staked 1 USDT ✓')
-
   // Step 2 — Analyzer does real Groq analysis and pays executor
   const analyzerTask = fundedSubtasks.find(s => s.agentType === 'analyzer')
   let analysis = ''
@@ -272,10 +255,6 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
   if (validation.approved && validation.score >= 60) {
     console.log('[PAYMENT] ✅ Score ' + validation.score + '/100 — APPROVED. Releasing payment to agents...')
 
-    // Return stakes to agents
-    await agentPay({ from: 'coordinator', to: 'analyzer', reason: 'stake returned — work approved' })
-    await agentPay({ from: 'coordinator', to: 'executor', reason: 'stake returned — work approved' })
-    console.log('[STAKE] Stakes returned to analyzer and executor ✓')
 
     validatorPayResult = await agentPay({
       from: 'executor',
@@ -285,35 +264,28 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
     results.push(validatorPayResult)
   } else {
     console.log('[PAYMENT] ❌ Score ' + validation.score + '/100 — REJECTED. Payment BLOCKED.')
-    console.log('[SLASH] Slashing agent stakes...')
-
-    // Slash stakes — send to user wallet or coordinator
-    const slashTarget = userWallet && userWallet.length === 42 ? userWallet : 'coordinator'
-    console.log('[SLASH] Sending slashed funds to: ' + (slashTarget === 'coordinator' ? 'coordinator (no user wallet provided)' : slashTarget))
-
-    if (slashTarget !== 'coordinator') {
-      // Send directly to user wallet
+    // Escrow refund — send 2 USDT back to user
+    const refundTarget = userWallet && userWallet.length === 42 ? userWallet : null
+    if (refundTarget) {
       const { ethers } = await import('ethers')
-      if (!ethers.isAddress(slashTarget)) {
-        console.log('[SLASH] Invalid wallet address — stakes held by coordinator')
-      } else {
+      if (ethers.isAddress(refundTarget)) {
         const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
-        const coordinator = new ethers.Wallet(process.env.COORDINATOR_PRIVATE_KEY, provider)
+        const coordinatorWallet = new ethers.Wallet(process.env.COORDINATOR_PRIVATE_KEY, provider)
         const usdt = new ethers.Contract('0xe90a57A45F1Eae578F5aec8eed5bA8Fc6F55eF65', [
           'function transfer(address to, uint256 amount) returns (bool)',
           'function decimals() view returns (uint8)'
-        ], coordinator)
+        ], coordinatorWallet)
         const decimals = await usdt.decimals()
         const amount = ethers.parseUnits('2', decimals)
-        const tx = await usdt.transfer(slashTarget, amount)
-        console.log('[SLASH] 2 USDT slashed → user wallet ' + slashTarget)
-        console.log('[SLASH] Tx: https://sepolia.etherscan.io/tx/' + tx.hash)
+        const tx = await usdt.transfer(refundTarget, amount)
+        console.log('[ESCROW] User refunded 2 USDT ✓')
+        console.log('[ESCROW] Tx: https://sepolia.etherscan.io/tx/' + tx.hash)
         await new Promise(r => setTimeout(r, 12000))
         const receipt = await provider.getTransactionReceipt(tx.hash)
-        console.log('[SLASH] Status: ' + (receipt && receipt.status === 1 ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...'))
+        console.log('[ESCROW] Status: ' + (receipt && receipt.status === 1 ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...'))
       }
     } else {
-      console.log('[SLASH] Stakes held by coordinator (refund user wallet not provided)')
+      console.log('[ESCROW] No user wallet provided — refund held by coordinator')
     }
 
     validatorPayResult = { status: 'blocked', reason: 'score below threshold', score: validation.score }
