@@ -197,8 +197,12 @@ async function main() {
       const score = r.validationScore ? ' | score: ' + r.validationScore + '/100' : ''
       const approved = r.approved ? ' | ✅ APPROVED' : ' | ❌ REJECTED'
       console.log('  validator → coordinator | report delivered ✓' + score + approved)
+    } else if (r.status === 'blocked') {
+      console.log('  ❌ Payment BLOCKED — validator rejected output')
+    } else if (r.status === 'refunded') {
+      console.log('  💰 User refunded 2 USDT — work did not meet quality threshold')
     } else {
-      console.log('  ' + JSON.stringify(r))
+      console.log('  ' + r.from + ' → ' + r.to + ' | ' + (r.status || 'unknown'))
     }
   }
 
