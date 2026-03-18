@@ -149,7 +149,7 @@ async function runValidator(report, goal) {
     messages: [
       {
         role: 'system',
-        content: AGENT_PROMPTS.validator + ' Respond ONLY with JSON: {"approved":true/false,"score":0-100,"feedback":"two sentences max"}'
+        content: AGENT_PROMPTS.validator + ' Respond ONLY with valid JSON, no extra text: {"approved":true/false,"score":0-100,"breakdown":{"accuracy":0-100,"completeness":0-100,"source_quality":0-100,"actionability":0-100},"feedback":"two sentences max"}. The score must equal the weighted average: accuracy(30%) + completeness(25%) + source_quality(25%) + actionability(20%). Approve if score >= 60.'
       },
       {
         role: 'user',
@@ -164,6 +164,13 @@ async function runValidator(report, goal) {
   const result = JSON.parse(raw)
 
   console.log('[VALIDATOR] Score: ' + result.score + '/100')
+  if (result.breakdown) {
+    console.log('[VALIDATOR] Breakdown:')
+    console.log('[VALIDATOR]   Accuracy:       ' + result.breakdown.accuracy + '/100')
+    console.log('[VALIDATOR]   Completeness:   ' + result.breakdown.completeness + '/100')
+    console.log('[VALIDATOR]   Source Quality: ' + result.breakdown.source_quality + '/100')
+    console.log('[VALIDATOR]   Actionability:  ' + result.breakdown.actionability + '/100')
+  }
   console.log('[VALIDATOR] Approved: ' + (result.approved ? '✅ YES' : '❌ NO'))
   console.log('[VALIDATOR] Feedback: ' + result.feedback + '\n')
 
