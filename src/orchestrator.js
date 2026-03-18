@@ -148,7 +148,9 @@ async function main() {
   console.log('     Built on Trac Network v' + ORCHESTRATOR_VERSION)
   console.log('=============================================\n')
   const args = process.argv.slice(2)
-  let goal = args.join(' ').replace(/^--goal\s*/i,'').trim()
+  const walletArg = args.find(a => a.startsWith('--userWallet='))
+  const userWallet = walletArg ? walletArg.replace('--userWallet=', '') : ''
+  let goal = args.join(' ').replace(/^--goal\s*/i,'').replace(/--userWallet\s*=?\S*/g,'').trim()
   if (!goal) {
     const rl = readline.createInterface({ input:process.stdin, output:process.stdout })
     goal = await new Promise(r => rl.question('Enter your automation goal: ', ans => { rl.close(); r(ans.trim()) }))
@@ -185,7 +187,7 @@ async function main() {
   }
 
   console.log('\n[ORCH] Running agent economy — scouts bidding, agents paying each other...')
-  const economyResults = await runAgentEconomy(enrichedSubtasks, goal)
+  const economyResults = await runAgentEconomy(enrichedSubtasks, goal, userWallet)
 
   console.log('\n[ECONOMY SUMMARY]')
   for (const r of economyResults) {

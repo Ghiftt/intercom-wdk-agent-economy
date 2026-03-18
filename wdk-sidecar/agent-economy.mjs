@@ -30,7 +30,7 @@ const PERSONALITIES = {
 const AGENT_PROMPTS = {
   analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly with key findings, data points, and identified patterns.',
   executor: 'You are the Executor — action-oriented and structured. You receive analyzed data and produce clean professional reports with clear sections, specific metrics, and actionable recommendations. No fluff.',
-  validator: 'You are the Validator — strict and scoring-focused. You give harsh but fair feedback. You approve only reports that fully address the goal with sufficient evidence and specific data.'
+  validator: 'You are the Validator — extremely strict and unforgiving. You score reports 0-100 and REJECT anything below 60. You MUST reject reports that: (1) address a vague or undefined goal like "x" or single letters, (2) contain hallucinated or unverifiable data, (3) lack specific cited sources, (4) are generic and not directly tied to the exact goal stated. A report about DeFi when the goal is unclear scores below 40. Only approve reports with specific, verifiable, goal-relevant data and clear methodology.'
 }
 
 function loadReputation() {
@@ -170,7 +170,7 @@ async function runValidator(report, goal) {
   return result
 }
 
-export async function runAgentEconomy(fundedSubtasks, goal) {
+export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
   console.log('\n[ECONOMY] Agent economy starting...\n')
   const results = []
   const reputation = loadReputation()
@@ -193,6 +193,23 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
     reason: 'won bid — data fetching service fee'
   })
   results.push(scoutPayResult)
+
+  // Step 1.5 — Collect stakes from analyzer and executor
+  console.log('\n[STAKE] Collecting agent stakes before work begins...')
+  const STAKE_AMOUNT = '1'
+  const analyzerStakeTx = await agentPay({
+    from: 'analyzer',
+    to: 'coordinator',
+    reason: 'stake — held until validation'
+  })
+  console.log('[STAKE] Analyzer staked 1 USDT ✓')
+
+  const executorStakeTx = await agentPay({
+    from: 'executor',
+    to: 'coordinator',
+    reason: 'stake — held until validation'
+  })
+  console.log('[STAKE] Executor staked 1 USDT ✓')
 
   // Step 2 — Analyzer does real Groq analysis and pays executor
   const analyzerTask = fundedSubtasks.find(s => s.agentType === 'analyzer')
@@ -254,6 +271,12 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
   let validatorPayResult
   if (validation.approved && validation.score >= 60) {
     console.log('[PAYMENT] ✅ Score ' + validation.score + '/100 — APPROVED. Releasing payment to agents...')
+
+    // Return stakes to agents
+    await agentPay({ from: 'coordinator', to: 'analyzer', reason: 'stake returned — work approved' })
+    await agentPay({ from: 'coordinator', to: 'executor', reason: 'stake returned — work approved' })
+    console.log('[STAKE] Stakes returned to analyzer and executor ✓')
+
     validatorPayResult = await agentPay({
       from: 'executor',
       to: 'validator',
@@ -262,6 +285,37 @@ export async function runAgentEconomy(fundedSubtasks, goal) {
     results.push(validatorPayResult)
   } else {
     console.log('[PAYMENT] ❌ Score ' + validation.score + '/100 — REJECTED. Payment BLOCKED.')
+    console.log('[SLASH] Slashing agent stakes...')
+
+    // Slash stakes — send to user wallet or coordinator
+    const slashTarget = userWallet && userWallet.length === 42 ? userWallet : 'coordinator'
+    console.log('[SLASH] Sending slashed funds to: ' + (slashTarget === 'coordinator' ? 'coordinator (no user wallet provided)' : slashTarget))
+
+    if (slashTarget !== 'coordinator') {
+      // Send directly to user wallet
+      const { ethers } = await import('ethers')
+      if (!ethers.isAddress(slashTarget)) {
+        console.log('[SLASH] Invalid wallet address — stakes held by coordinator')
+      } else {
+        const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
+        const coordinator = new ethers.Wallet(process.env.COORDINATOR_PRIVATE_KEY, provider)
+        const usdt = new ethers.Contract('0xe90a57A45F1Eae578F5aec8eed5bA8Fc6F55eF65', [
+          'function transfer(address to, uint256 amount) returns (bool)',
+          'function decimals() view returns (uint8)'
+        ], coordinator)
+        const decimals = await usdt.decimals()
+        const amount = ethers.parseUnits('2', decimals)
+        const tx = await usdt.transfer(slashTarget, amount)
+        console.log('[SLASH] 2 USDT slashed → user wallet ' + slashTarget)
+        console.log('[SLASH] Tx: https://sepolia.etherscan.io/tx/' + tx.hash)
+        await new Promise(r => setTimeout(r, 12000))
+        const receipt = await provider.getTransactionReceipt(tx.hash)
+        console.log('[SLASH] Status: ' + (receipt && receipt.status === 1 ? 'CONFIRMED ON-CHAIN ✓' : 'PENDING...'))
+      }
+    } else {
+      console.log('[SLASH] Stakes held by coordinator (refund user wallet not provided)')
+    }
+
     validatorPayResult = { status: 'blocked', reason: 'score below threshold', score: validation.score }
     results.push(validatorPayResult)
   }

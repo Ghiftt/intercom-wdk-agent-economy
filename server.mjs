@@ -8,10 +8,13 @@ app.use(express.json())
 
 app.post('/run', (req, res) => {
   const goal = req.body.goal || 'scan defi yields'
+  const userWallet = req.body.userWallet || ''
   console.log('[SERVER] Received goal: ' + goal)
+  console.log('[SERVER] User wallet: ' + (userWallet || 'not provided'))
 
   const safeGoal = goal.replace(/"/g, '\\"')
-  const command = `node /home/ubuntu/intercom-wdk-agent-economy/src/orchestrator.js --goal "${safeGoal}"`
+  const safeWallet = userWallet.replace(/"/g, '')
+  const command = `node /home/ubuntu/intercom-wdk-agent-economy/src/orchestrator.js --goal "${safeGoal}" --userWallet="${safeWallet}"`
 
   exec(command, { timeout: 120000 }, (error, stdout, stderr) => {
     if (error) {
@@ -31,4 +34,3 @@ const PORT = 3001
 app.listen(PORT, () => {
   console.log('[SERVER] Kenoflow Agent Economy webhook running on port ' + PORT)
 })
-
