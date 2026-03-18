@@ -10,7 +10,6 @@ dotenv.config()
 
 const app = express()
 app.use(express.json())
-app.use(express.static(__dirname))
 
 const TASKS_FILE = resolve(__dirname, 'tasks.json')
 const PROJECT_PATH = '/home/ubuntu/intercom-wdk-agent-economy'
@@ -253,6 +252,12 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(resolve(__dirname, 'dashboard.html'))
 })
+
+// Serve static files
+app.use(express.static('/home/ubuntu/intercom-wdk-agent-economy'))
+
+// Serve static files
+app.use(express.static('/home/ubuntu/intercom-wdk-agent-economy'))
 
 const PORT = 3001
 app.listen(PORT, () => {
