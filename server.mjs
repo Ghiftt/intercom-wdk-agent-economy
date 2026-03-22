@@ -197,8 +197,8 @@ app.get('/dashboard-data', (req, res) => {
   res.json({
     stats: { total, completed, refunded, approvalRate, totalPaid },
     reputation,
-    tasks: tasks.slice(-20).reverse(),
-    lastRun,
+    tasks: tasks.slice(-10).reverse().map(t => ({...t, output: t.output ? t.output.slice(0, 200) : null, error: t.error ? t.error.slice(0, 100) : null})),
+    lastRun: lastRun ? {...lastRun, output: lastRun.output ? lastRun.output.slice(0, 200) : null} : null,
     lastValidatorResult: lastRun ? {
       score: lastRun.validatorScore,
       approved: lastRun.approved,
