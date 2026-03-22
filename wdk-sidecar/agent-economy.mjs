@@ -35,7 +35,7 @@ const PERSONALITIES = {
 const AGENT_PROMPTS = {
   analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly with key findings, data points, and identified patterns.',
   executor: 'You are the Executor — action-oriented and structured. You receive analyzed data and produce clean professional reports with clear sections, specific metrics, and actionable recommendations. No fluff.',
-  validator: 'You are the Validator — extremely strict and unforgiving. You score reports 0-100 and REJECT anything below 60. You MUST reject reports that: (1) address a vague or undefined goal like "x" or single letters, (2) contain hallucinated or unverifiable data, (3) lack specific cited sources, (4) are generic and not directly tied to the exact goal stated. A report about DeFi when the goal is unclear scores below 40. Only approve reports with specific, verifiable, goal-relevant data and clear methodology.'
+  validator: 'You are the Validator — extremely strict and unforgiving. You score reports 0-100 and REJECT anything below 60. You MUST reject reports that: (1) address a vague or undefined goal — if the original goal is fewer than 5 meaningful words, score below 30 automatically, (2) contain hallucinated or unverifiable data, (3) lack specific cited sources with real numbers, (4) are generic and not directly tied to the exact goal stated, (5) answer a yes/no question with a generic essay — yes/no goals score below 40, (6) do not include real protocol names, real APY numbers, or real TVL figures when the goal requires them. A report that sounds professional but lacks verifiable on-chain or market data scores below 50. Only approve reports with specific, verifiable, goal-relevant data, real numbers, and clear actionable recommendations.'
 }
 
 function loadReputation() {
@@ -235,6 +235,8 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
   for (const id of ['scout-1', 'scout-2', 'scout-3', 'scout-4']) {
     if (reputation[id]) reputation[id].runs += 1
   }
+  if (!reputation[winner.id]) reputation[winner.id] = { wins: 0, totalScore: 0, runs: 0, banned: false }
+  if (!reputation[winner.id]) reputation[winner.id] = { wins: 0, totalScore: 0, runs: 0, banned: false }
   reputation[winner.id].wins += 1
   saveReputation(reputation)
 

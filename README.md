@@ -1,118 +1,279 @@
-# Intercom AI Agent Task Orchestrator
+# Provex — AI Agent Accountability Protocol
 
-## Trac Address 
+A decentralized protocol that ensures AI agents are only paid for verified, high-quality work.
 
-trac1085gpsy3lnrjapuvxv63qnua9red3ejcjjzfuuftv7493t60v4uqp4nlsz
+> **Agents only get paid when their work passes validation.**
 
-This fork adds an **AI-powered task orchestrator** on top of the Intercom stack:
+🔗 **Live Demo:** https://provex.kenoflow.xyz
+👉 Fully functional agent economy — submit tasks, watch agents execute, and see real on-chain payments
+⛓️ **Network:** Ethereum Sepolia
+✅ **All payments executed on-chain via WDK wallets — confirmed on Etherscan**
 
-- User enters a natural-language goal
-- LLM decomposes it into actionable subtasks (e.g., data-fetcher, analyzer, reporter)
-- Subtasks are delegated across agents via Intercom P2P sidechannels
-- Real-time visual UI shows task cards + console logs (peer discovery, task broadcast, acknowledgments, completion)
+---
 
-Built for the **Intercom Vibe Competition** on Trac Network.
+## 🚀 What Makes This Impressive
 
-## Live Demo (Recommended – One-Click View)
+- Real on-chain USDT payments between autonomous agents
+- Multi-agent coordination with competitive bidding
+- Deterministic validation layer gating all payments
+- Self-healing system (bad agents removed automatically)
+- Live data analysis using DeFiLlama APIs
 
-Open the hosted interactive demo here:  
-**[Try Intercom AI Agent Orchestrator Now](https://ghiftt.github.io/intercom-ai-orchestrator/demo/index.html)**
+> 👉 This is not a simulation — it is a working economic system
 
-- Enter a goal (e.g., "Monitor TRAC wallet for large transfers and alert team")
-- Click "Orchestrate"
-- Watch task decomposition, sidechannel logs, peer discovery, task assignments, and completion
+---
 
-**Note:** The online version shows the UI and basic simulation. Full real-time multi-peer sidechannel interaction requires local Pear runtime (see local instructions below).
+## The Problem
 
-## Video Proof of Functionality
+Today, AI agents get paid regardless of output quality.
 
-Full demo recording (~30 seconds):  
-[Intercom AI Agent Orchestrator Demo](https://youtu.be/KlQO1ETwssM)  
-Shows complete flow: goal input → LLM breakdown → sidechannel join/peers → task assignment → completion with logs.
+- Bad research still gets delivered
+- No penalty for hallucinations
+- No refund mechanism for users
+- No accountability layer between "work" and "payment"
 
-## Local Demo Instructions (Full P2P Functionality)
+This creates a broken incentive system:
 
-1. Clone the repo and follow setup in `SKILL.md` (requires **Pear runtime only** – never native Node).  
-2. Open `demo/index.html` in a browser (via file:// or a local server like `npx serve demo`).  
-3. Enter a goal (e.g., "Monitor TRAC wallet for large transfers and alert team").  
-4. Click "Orchestrate".  
-5. Observe task cards updating + console logs showing sidechannel join, peer discovery, task broadcast & acknowledgments, and completion.
+> Agents are rewarded for output — not correctness.
 
-## Original Intercom Reference Implementation
+---
 
-This repository builds on the reference implementation of the **Intercom** stack on Trac Network for an **internet of agents**.
+## Why Now
 
-At its core, Intercom is a **peer-to-peer (P2P) network**: peers discover each other and communicate directly (with optional relaying) over the Trac/Holepunch stack (Hyperswarm/HyperDHT + Protomux). There is no central server required for sidechannel messaging.
+Autonomous agents are rapidly being deployed across DeFi, research, and automation workflows.
 
-Features:
-- **Sidechannels**: fast, ephemeral P2P messaging (with optional policy: welcome, owner-only write, invites, PoW, relaying).
-- **SC-Bridge**: authenticated local WebSocket control surface for agents/tools (no TTY required).
-- **Contract + protocol**: deterministic replicated state and optional chat (subnet plane).
-- **MSB client**: optional value-settled transactions via the validator network.
+But without accountability:
+- They hallucinate
+- They waste funds
+- They break trust
 
-Additional references: https://www.moltbook.com/post/9ddd5a47-4e8d-4f01-9908-774669a11c21 and moltbook m/intercom
+Provex introduces the missing layer: **Economic enforcement of AI quality.**
 
-For full, agent-oriented instructions and operational guidance, **start with `SKILL.md`**.  
-It includes setup steps, required runtime, first-run decisions, and operational notes.
+---
 
-## Awesome Intercom
+## The Solution
 
-For a curated list of agentic Intercom apps check out: https://github.com/Trac-Systems/awesome-intercom
+Provex enforces economic accountability in AI agent pipelines. Every output is scored. Every payment is gated. Every failure has consequences.
 
-## What this repo is for
-- A working, pinned example to bootstrap agents and peers onto Trac Network.
-- A template that can be trimmed down for sidechannel-only usage or extended for full contract-based apps (with AI orchestration added here).
+- ✅ Score ≥ 60 → payment released to agents
+- ❌ Score < 60 → payments blocked, user refunded
+- 📉 Repeated failure → reputation penalty → permanent ban
+- ⚡ Agent banned → new agent auto-spawned to replace it
 
-## How to use
-Use the **Pear runtime only** (never native node).  
-Follow the steps in `SKILL.md` to install dependencies, run the admin peer, and join peers correctly.
+---
 
-## Architecture (ASCII map)
+## 🔁 Self-Regulation Loop
+```
+Fail → Penalized → Banned → Replaced
+```
 
-Intercom is a single long-running Pear process that participates in three distinct networking "planes":
-- **Subnet plane**: deterministic state replication (Autobase/Hyperbee over Hyperswarm/Protomux).
-- **Sidechannel plane**: fast ephemeral messaging (Hyperswarm/Protomux) with optional policy gates (welcome, owner-only write, invites).
-- **MSB plane**: optional value-settled transactions (Peer -> MSB client -> validator network).
+The protocol never degrades. Bad agents are removed and replaced automatically — no human intervention required.
 
-```text
-                          Pear runtime (mandatory)
-                pear run . --peer-store-name <peer> --msb-store-name <msb>
-                                        |
-                                        v
-  +-------------------------------------------------------------------------+
-  |                            Intercom peer process                         |
-  |                                                                         |
-  |  Local state:                                                          |
-  |  - stores/<peer-store-name>/...   (peer identity, subnet state, etc)    |
-  |  - stores/<msb-store-name>/...    (MSB wallet/client state)             |
-  |                                                                         |
-  |  Networking planes:                                                     |
-  |                                                                         |
-  |  [1] Subnet plane (replication)                                         |
-  |      --subnet-channel <name>                                            |
-  |      --subnet-bootstrap <admin-writer-key-hex>  (joiners only)          |
-  |                                                                         |
-  |  [2] Sidechannel plane (ephemeral messaging)                             |
-  |      entry: 0000intercom   (name-only, open to all)                     |
-  |      extras: --sidechannels chan1,chan2                                 |
-  |      policy (per channel): welcome / owner-only write / invites         |
-  |      relay: optional peers forward plaintext payloads to others          |
-  |                                                                         |
-  |  [3] MSB plane (transactions / settlement)                               |
-  |      Peer -> MsbClient -> MSB validator network                          |
-  |                                                                         |
-  |  Agent control surface (preferred):                                     |
-  |  SC-Bridge (WebSocket, auth required)                                   |
-  |    JSON: auth, send, join, open, stats, info, ...                       |
-  +------------------------------+------------------------------+-----------+
-                                 |                              |
-                                 | SC-Bridge (ws://host:port)   | P2P (Hyperswarm)
-                                 v                              v
-                       +-----------------+            +-----------------------+
-                       | Agent / tooling |            | Other peers (P2P)     |
-                       | (no TTY needed) |<---------->| subnet + sidechannels |
-                       +-----------------+            +-----------------------+
+---
 
-  Optional for local testing:
-  - --dht-bootstrap "<host:port,host:port>" overrides the peer's HyperDHT bootstraps
-    (all peers that should discover each other must use the same list).
+## 🏗️ Architecture
+```
+User → API → Task Queue → Agents Bid → Pipeline Executes → Validator Scores → Payment Gate → Blockchain
+```
+
+---
+
+## How It Works
+```
+POST TASK → AGENTS BID → PIPELINE EXECUTES → VALIDATOR SCORES → PAYMENT GATED
+```
+
+1. User posts a task via REST API with a USDT budget
+2. Groq Llama 3 decomposes the goal into subtasks
+3. Scout agents bid competitively — price (40%) · confidence (30%) · speed (20%) · wins (10%)
+4. Agents coordinate and exchange micro-payments during execution
+5. Analyzer fetches live DeFiLlama data and performs deep analysis
+6. Executor builds a structured final report
+7. Validator scores the output across 4 dimensions
+8. Score ≥ 60 → escrow released → agents paid
+9. Score < 60 → all payments blocked → user refunded
+10. Reputation updated → ban check → Scout-4 auto-spawns if needed
+
+---
+
+## 🧪 Demo Flow (Try This)
+
+1. Open https://provex.kenoflow.xyz
+2. View the agent roster — see active agents, banned agents, auto-spawned replacements
+3. Check the Validator panel — see the quality score that gates all payments
+4. Watch the payment feed — every transaction is real and on-chain
+5. Submit a task via the API:
+```bash
+curl -X POST https://provex.kenoflow.xyz/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "Analyze top USDT lending protocols by TVL", "budget": 3, "posterWallet": "0x000"}'
+```
+
+6. See:
+   - ✅ Payment released if score ≥ 60
+   - ❌ Refund triggered if score < 60
+
+---
+
+## Dashboard
+
+![Provex Dashboard](./screenshots/dashboard.png)
+
+The dashboard shows:
+- Active agents, banned agents, and auto-spawned replacements
+- Live validator scores across 4 dimensions
+- Reputation bars updating in real-time
+- Payment feed with every on-chain transaction
+- Full task board with status tracking
+
+👉 This is the live state of a self-regulating agent economy
+
+---
+
+## 🔍 On-Chain Proof
+
+All payments and refunds are verifiable on Ethereum Sepolia:
+
+- **Example transaction:** https://sepolia.etherscan.io/tx/0x41740cc3668779dae8701d52cc1280b533138e8a4f6106fc7418d7e0ee284ce9
+- **Agent wallet:** https://sepolia.etherscan.io/address/0x758517dd793aE554363f707847dE43f38C8f9c03
+
+---
+
+## Agent Roster
+
+Each agent has a distinct strategy, wallet, and economic behavior:
+
+| Agent | Role | WDK Wallet |
+|---|---|---|
+| Scout-1 "The Economist" | Bids low, fast, terse | `0x9858...da94` |
+| Scout-2 "The Analyst" | Bids mid, thorough | `0x6Fac...b9C0` |
+| Scout-3 "The Hustler" | Bids high, aggressive | `0xb671...2D7A` |
+| Scout-4 "The Newcomer" | Auto-spawned replacement | `0x5938...7d47` |
+| Analyzer | DeFiLlama data · deep analysis | `0xF3f5...718E` |
+| Executor | Structured report builder | `0x51cA...74cA` |
+| Validator | Quality gate · payment arbiter | `0xA40c...` |
+
+Every agent has its own WDK wallet and signs its output with `account.sign()` before submission.
+
+---
+
+## Validator — Proof of Quality Score
+
+The Validator is the core of Provex. It scores every output across 4 dimensions and gates all payments:
+
+| Dimension | Weight |
+|---|---|
+| Accuracy | 30% |
+| Completeness | 25% |
+| Source Quality | 25% |
+| Actionability | 20% |
+
+**Threshold: 60 / 100**
+
+The Validator rejects:
+- Vague or undefined answers
+- Hallucinated or unverifiable data
+- Generic reports not tied to the exact goal
+- Missing cited sources
+
+---
+
+## Reputation & Self-Regulation
+```
+APPROVAL:   winning scout totalScore += validator score
+REJECTION:  scout, analyzer, executor totalScore -= 15
+
+BAN CHECK:  repScore = totalScore / runs
+            repScore < 40 → banned = true → excluded forever
+
+AUTO-SPAWN: active scouts < 2 → Scout-4 activates from WDK index 7
+```
+
+---
+
+## Payment Flow
+
+**APPROVED (score ≥ 60):**
+```
+Scout → Analyzer:     1 USDT  ✓ on-chain
+Analyzer → Executor:  1 USDT  ✓ on-chain
+Executor → Validator: 1 USDT  ✓ on-chain
+```
+
+**REJECTED (score < 60):**
+```
+All agent payments:   BLOCKED
+Coordinator → Poster: 2 USDT refund ✓ on-chain
+Penalties applied to all agents involved
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Wallet Infrastructure | Tether WDK (`@tetherto/wdk`, `@tetherto/wdk-wallet-evm`) |
+| Blockchain | Ethereum Sepolia |
+| Payment Token | USDT ERC-20 |
+| AI / LLM | Groq Llama 3 (`llama-3.3-70b-versatile`) |
+| P2P Coordination | Hyperswarm DHT |
+| Output Signing | WDK `account.sign()` per agent |
+| Real Data | DeFiLlama API |
+| Server | Express.js / Node.js |
+
+---
+
+## WDK Integration
+
+Tether WDK is central to Provex — not peripheral. Every agent has its own non-custodial wallet:
+```javascript
+// Each agent derives its own wallet
+const wallet = await wdk.getWallet(agentIndex);
+const account = await wallet.getAccount();
+
+// Agent signs its output before submission
+const signature = await account.sign(outputHash);
+
+// Payment only released after validator approval
+await agentPay(fromAgent, toAgent, amount);
+```
+
+---
+
+## API
+```
+POST /tasks          — Submit a task { goal, budget, posterWallet }
+GET  /tasks          — List all tasks
+GET  /tasks/:id      — Get task status
+GET  /dashboard-data — Full protocol snapshot
+GET  /health         — System status
+```
+
+---
+
+## The Shift
+
+Provex changes the incentive model:
+
+**Before:**
+> Agents get paid for producing output
+
+**After:**
+> Agents get paid only for producing **correct output**
+
+This aligns agent incentives, user expectations, and economic outcomes — creating a self-regulating economy that improves over time without human intervention.
+
+---
+
+## Known Limitations & Next Steps
+
+- Reputation stored in local JSON → next: on-chain reputation contract
+- Scout bid prices use randomized ranges → next: real competitive auction
+- Coordinator acts as trusted escrow → next: fully autonomous agent signing
+
+---
+
+## License
+
+MIT

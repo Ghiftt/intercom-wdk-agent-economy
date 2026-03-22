@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provex — AI Agent Accountability Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --green: #059669;
+    --green-bg: #ecfdf5;
+    --green-border: #a7f3d0;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --red-border: #fecaca;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --blue-border: #bfdbfe;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Epilogue', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 32px; height: 32px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; letter-spacing: -1px; }
+  .logo-text { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .logo-tag { font-size: 11px; color: var(--text-3); font-family: 'DM Mono', monospace; margin-left: 4px; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--green); font-family: 'DM Mono', monospace; letter-spacing: 0.5px; }
+  .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .network-badge { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-3); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; }
+  .refresh-btn { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text-2); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 12px; cursor: pointer; transition: all 0.15s; }
+  .refresh-btn:hover { background: var(--bg); border-color: var(--border-strong); }
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .sidebar { grid-column: 1; display: flex; flex-direction: column; gap: 16px; }
+  .main { grid-column: 2; display: flex; flex-direction: column; gap: 16px; }
+  .stats-bar { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+  .stat-value { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue { color: var(--blue); }
+  .stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-badge { font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--bg); border: 1px solid var(--border); color: var(--text-2); }
+  .card-body { padding: 16px 20px; }
+  .agent-row { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid var(--border); transition: all 0.3s ease; }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-row.banned { background: var(--red-bg); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--red-border); margin-bottom: 4px; animation: banFlash 0.5s ease; }
+  .agent-row.new-agent { background: var(--green-bg); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--green-border); margin-bottom: 4px; animation: spawnSlide 0.6s ease; }
+  @keyframes banFlash { 0% { background: #fef2f2; } 30% { background: #fee2e2; } 100% { background: var(--red-bg); } }
+  @keyframes spawnSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  .agent-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .agent-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .agent-status { font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.3px; }
+  .status-active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .status-banned { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .status-new { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); animation: pulse 2s infinite; }
+  .status-pipeline { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  .agent-meta { display: flex; gap: 12px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-3); }
+  .rep-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .rep-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.6s ease; }
+  .rep-fill.low { background: var(--amber); }
+  .rep-fill.critical { background: var(--red); }
+  .wallet-addr { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-3); margin-top: 3px; }
+  .wallet-addr a { color: var(--blue); text-decoration: none; }
+  .wallet-addr a:hover { text-decoration: underline; }
+  .form-group { margin-bottom: 12px; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'DM Mono', monospace; }
+  .form-input, .form-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Epilogue', sans-serif; color: var(--text); background: var(--surface); transition: border-color 0.15s; outline: none; }
+  .form-input:focus, .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .submit-btn { width: 100%; padding: 11px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; font-family: 'Epilogue', sans-serif; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+  .submit-btn:disabled { background: var(--text-3); cursor: not-allowed; transform: none; box-shadow: none; }
+  .filter-bar { display: flex; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--bg); flex-wrap: wrap; }
+  .filter-btn { font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+  .filter-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .task-list { max-height: 400px; overflow-y: auto; }
+  .task-row { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .task-row:last-child { border-bottom: none; }
+  .task-row:hover { background: var(--bg); }
+  .task-row.expanded { background: var(--blue-bg); }
+  .task-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .task-goal { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4; }
+  .task-status-badge { font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .badge-completed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-refunded { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-running { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge-open { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .task-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-3); flex-wrap: wrap; }
+  .task-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--blue-border); }
+  .task-row.expanded .task-detail { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .detail-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .score-breakdown { display: flex; flex-direction: column; gap: 5px; }
+  .score-row { display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: 'DM Mono', monospace; }
+  .score-name { color: var(--text-2); width: 80px; flex-shrink: 0; }
+  .score-bar-bg { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+  .score-num { color: var(--text); font-weight: 500; width: 30px; text-align: right; }
+  .payment-mini { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-2); margin-bottom: 4px; }
+  .payment-mini a { color: var(--blue); text-decoration: none; }
+  .score-big { display: flex; align-items: baseline; gap: 6px; margin-bottom: 16px; }
+  .score-number { font-size: 52px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+  .score-number.approved { color: var(--green); }
+  .score-number.rejected { color: var(--red); }
+  .score-label { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 20px; font-family: 'DM Mono', monospace; }
+  .score-label.approved { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .score-label.rejected { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .breakdown-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .breakdown-dim { font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .breakdown-score { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .breakdown-weight { font-size: 10px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+  .feedback-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.6; margin-top: 12px; font-style: italic; }
+  .yield-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .yield-row:last-child { border-bottom: none; }
+  .yield-protocol { font-weight: 600; font-size: 13px; color: var(--text); text-transform: capitalize; }
+  .yield-chain { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-3); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 1px 6px; margin-left: 6px; }
+  .yield-apy { font-size: 18px; font-weight: 800; color: var(--green); letter-spacing: -0.5px; line-height: 1; }
+  .yield-tvl { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-3); margin-top: 2px; }
+  .payment-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; font-family: 'DM Mono', monospace; }
+  .payment-row:last-child { border-bottom: none; }
+  .pay-from { color: var(--text-2); font-weight: 500; }
+  .pay-arrow { color: var(--text-3); font-size: 10px; }
+  .pay-to { color: var(--text); font-weight: 500; }
+  .pay-amount { color: var(--green); font-weight: 600; margin-left: auto; }
+  .pay-tx a { color: var(--blue); text-decoration: none; font-size: 10px; }
+  .escrow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .escrow-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .escrow-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .escrow-value { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .toast-container { position: fixed; top: 76px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow-md); display: flex; align-items: flex-start; gap: 10px; min-width: 280px; max-width: 340px; animation: toastIn 0.3s ease; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .toast-content { flex: 1; }
+  .toast-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .toast-msg { font-size: 11px; color: var(--text-2); font-family: 'DM Mono', monospace; line-height: 1.4; }
+  .toast-close { font-size: 14px; color: var(--text-3); cursor: pointer; }
+  .toast.toast-ban { border-left: 3px solid var(--red); }
+  .toast.toast-spawn { border-left: 3px solid var(--blue); }
+  .toast.toast-approved { border-left: 3px solid var(--green); }
+  .toast.toast-rejected { border-left: 3px solid var(--red); }
+  .empty-state { text-align: center; padding: 32px 20px; color: var(--text-3); }
+  .empty-icon { font-size: 28px; margin-bottom: 8px; }
+  .empty-text { font-size: 13px; }
+  .loading { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; padding: 16px; } .stats-bar { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">Px</div>
+    <span class="logo-text">Provex</span>
+    <span class="logo-tag">AI Agent Accountability Protocol</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="network-badge">Ethereum Sepolia</div>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</header>
+<div class="toast-container" id="toastContainer"></div>
+<div class="layout">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="statTotal">—</div><div class="stat-sub">submitted to protocol</div></div>
+    <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="statCompleted">—</div><div class="stat-sub">work approved & paid</div></div>
+    <div class="stat-card"><div class="stat-label">Approval Rate</div><div class="stat-value" id="statRate">—</div><div class="stat-sub">validator pass rate</div></div>
+    <div class="stat-card"><div class="stat-label">Total Paid</div><div class="stat-value green" id="statPaid">—</div><div class="stat-sub">USDT to agents</div></div>
+    <div class="stat-card"><div class="stat-label">Active Agents</div><div class="stat-value blue" id="statAgents">—</div><div class="stat-sub">in protocol</div></div>
+  </div>
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Post a Task</span><span class="card-badge">min 3 USDT</span></div>
+      <div class="card-body">
+        <div class="form-group"><label class="form-label">Goal</label><textarea class="form-textarea" id="taskGoal" placeholder="Describe what you need agents to research, analyze, or investigate..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Budget (USDT)</label><input class="form-input" id="taskBudget" type="number" value="3" min="3" step="0.5"></div>
+          <div class="form-group"><label class="form-label">Your Wallet</label><input class="form-input" id="taskWallet" placeholder="0x..."></div>
+        </div>
+        <button class="submit-btn" onclick="submitTask()" id="submitBtn">⚡ Submit Task</button>
+        <div id="submitStatus" style="margin-top:8px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text-3);text-align:center;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Escrow Overview</span></div>
+      <div class="card-body">
+        <div class="escrow-grid">
+          <div class="escrow-item"><div class="escrow-label">Posted</div><div class="escrow-value" id="escrowPosted">—</div><div class="stat-sub" style="font-size:10px;">USDT total</div></div>
+          <div class="escrow-item"><div class="escrow-label">Paid Out</div><div class="escrow-value" id="escrowPaid" style="color:var(--green);">—</div><div class="stat-sub" style="font-size:10px;">to agents</div></div>
+          <div class="escrow-item"><div class="escrow-label">Refunded</div><div class="escrow-value" id="escrowRefunded" style="color:var(--red);">—</div><div class="stat-sub" style="font-size:10px;">to posters</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Agent Roster</span><span class="card-badge" id="agentCount">0 active</span></div>
+      <div class="card-body" style="padding:8px 16px;" id="agentRoster"><div class="empty-state"><div class="loading"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Live DeFi Yields</span><span class="card-badge">DeFiLlama</span></div>
+      <div class="card-body" style="padding:4px 16px;" id="liveYields"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">No data yet</div></div></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Task Board</span><span class="card-badge" id="taskCount">0 tasks</span></div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('running',this)">🔄 Running</button>
+        <button class="filter-btn" onclick="setFilter('completed',this)">✅ Completed</button>
+        <button class="filter-btn" onclick="setFilter('refunded',this)">❌ Refunded</button>
+        <button class="filter-btn" onclick="setFilter('open',this)">⏳ Open</button>
+      </div>
+      <div class="task-list" id="taskList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet. Post your first task!</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Last Validator Result</span><span class="card-badge" id="lastRunTime">—</span></div>
+      <div class="card-body" id="validatorResult"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">No results yet</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Payment Feed</span><span class="card-badge">On-chain</span></div>
+      <div class="card-body" style="padding:4px 20px;" id="paymentFeed"><div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">No payments yet</div></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  let currentFilter = 'all'
+  let prevData = null
+
+  const AGENT_WALLETS = {
+    'scout-1': '0x9858EfFD232B4033E47d90003D41EC34EcaEda94',
+    'scout-2': '0x6Fac4D18c912343BF86fa7049364Dd4E424Ab9C0',
+    'scout-3': '0xb6716976A3ebe8D39aCEB04372f22Ff8e6802D7A',
+    'scout-4': '0x593814d3309e2dF31D112824F0bb5aa7Cb0D7d47',
+    'analyzer': '0xF3f50213C1d2e255e4B2bAD430F8A38EEF8D718E',
+    'executor': '0x51cA8ff9f1C0a99f88E86B8112eA3237F55374cA',
+    'validator': '0xA40cFBFc8534FFC84E20a7d8bBC3729B26a35F6f'
+  }
+
+  const AGENT_LABELS = {
+    'scout-1': '🔎 Scout-1 "The Economist"',
+    'scout-2': '🔎 Scout-2 "The Analyst"',
+    'scout-3': '🔎 Scout-3 "The Hustler"',
+    'scout-4': '🔎 Scout-4 "The Newcomer"',
+    'analyzer': '🧠 Analyzer',
+    'executor': '⚡ Executor',
+    'validator': '✅ Validator'
+  }
+
+  function shortAddr(addr) { if (!addr) return '—'; return addr.slice(0,6)+'...'+addr.slice(-4) }
+  function etherscanAddr(addr) { return 'https://sepolia.etherscan.io/address/'+addr }
+  function etherscanTx(tx) { return 'https://sepolia.etherscan.io/tx/'+tx }
+  function timeAgo(iso) { if (!iso) return '—'; const d=Math.floor((Date.now()-new Date(iso))/1000); if(d<60) return d+'s ago'; if(d<3600) return Math.floor(d/60)+'m ago'; return Math.floor(d/3600)+'h ago' }
+  function scoreColor(s) { if(s>=75) return 'var(--green)'; if(s>=50) return 'var(--amber)'; return 'var(--red)' }
+
+  function getStatusBadge(status) {
+    const map = { completed:'<span class="task-status-badge badge-completed">✅ APPROVED</span>', refunded:'<span class="task-status-badge badge-refunded">❌ REJECTED</span>', running:'<span class="task-status-badge badge-running">🔄 RUNNING</span>', open:'<span class="task-status-badge badge-open">⏳ OPEN</span>' }
+    return map[status] || '<span class="task-status-badge">'+status+'</span>'
+  }
+
+  function showToast(type, title, msg) {
+    const icons = { ban:'🚫', spawn:'🆕', approved:'✅', rejected:'❌', submitted:'📋' }
+    const el = document.createElement('div')
+    el.className = 'toast toast-'+type
+    el.innerHTML = '<div class="toast-icon">'+icons[type]+'</div><div class="toast-content"><div class="toast-title">'+title+'</div><div class="toast-msg">'+msg+'</div></div><div class="toast-close" onclick="this.parentElement.remove()">×</div>'
+    document.getElementById('toastContainer').appendChild(el)
+    setTimeout(() => el.remove(), 6000)
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    renderTasks(window._lastTasks || [])
+  }
+
+  function renderAgents(rep) {
+    const all = ['scout-1','scout-2','scout-3','scout-4','analyzer','executor','validator']
+    let active = 0, html = ''
+    for (const id of all) {
+      const r = rep[id] || {}
+      const banned = r.banned === true
+      const isNew = id === 'scout-4' && (r.runs||0) === 0 && !banned
+      const isPipeline = ['analyzer','executor','validator'].includes(id)
+      if (!banned) active++
+      let sc = 'status-active', st = 'ACTIVE', rc = ''
+      if (banned) { sc='status-banned'; st='BANNED'; rc='banned' }
+      else if (isNew) { sc='status-new'; st='NEW'; rc='new-agent' }
+      else if (isPipeline) { sc='status-pipeline'; st='PIPELINE' }
+      const wins = r.wins||0
+      const avg = r.wins > 0 ? (r.totalScore/r.wins).toFixed(0) : '—'
+      const rep100 = r.runs > 0 ? Math.min(100,Math.round(r.totalScore/r.runs)) : (id==='scout-4'?0:100)
+      const barClass = rep100 < 40 ? 'critical' : rep100 < 60 ? 'low' : ''
+      const wallet = AGENT_WALLETS[id]
+      html += '<div class="agent-row '+rc+'"><div class="agent-top"><div class="agent-name">'+AGENT_LABELS[id]+'</div><span class="agent-status '+sc+'">'+st+'</span></div><div class="agent-meta"><span>🏆 '+wins+' wins</span><span>📊 '+avg+'/100</span></div>'
+      if (!isPipeline) html += '<div class="rep-bar"><div class="rep-fill '+barClass+'" style="width:'+Math.max(2,rep100)+'%"></div></div>'
+      html += '<div class="wallet-addr"><a href="'+etherscanAddr(wallet)+'" target="_blank">'+shortAddr(wallet)+'</a></div></div>'
+    }
+    document.getElementById('agentRoster').innerHTML = html
+    document.getElementById('agentCount').textContent = active+' active'
+    document.getElementById('statAgents').textContent = active
+  }
+
+  function renderTasks(tasks) {
+    window._lastTasks = tasks
+    const filtered = currentFilter === 'all' ? tasks : tasks.filter(t => t.status === currentFilter)
+    document.getElementById('taskCount').textContent = tasks.length+' tasks'
+    if (!filtered.length) { document.getElementById('taskList').innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks match this filter</div></div>'; return }
+    document.getElementById('taskList').innerHTML = filtered.map(t => {
+      const bd = t.validatorBreakdown || {}
+      const pmts = t.payments || []
+      const scoreHtml = t.validatorScore !== null ? '<div class="score-breakdown">'+[['Accuracy',bd.accuracy,'30%'],['Complete',bd.completeness,'25%'],['Sources',bd.source_quality,'25%'],['Action',bd.actionability,'20%']].map(([n,v,w]) => '<div class="score-row"><span class="score-name">'+n+'</span><div class="score-bar-bg"><div class="score-bar-fill" style="width:'+(v||0)+'%;background:'+scoreColor(v||0)+'"></div></div><span class="score-num">'+(v??'—')+'</span></div>').join('')+'</div>' : '<div style="font-size:11px;color:var(--text-3);font-family:DM Mono,monospace;">Pending...</div>'
+      const pmtHtml = pmts.length ? pmts.map(p => '<div class="payment-mini"><span>'+p.from+'</span><span style="color:var(--text-3);margin:0 4px;">→</span><span>'+p.to+'</span><span style="margin-left:4px;color:var(--green);font-weight:600;">'+p.amount+'</span><a href="'+etherscanTx(p.tx)+'" target="_blank" style="margin-left:auto;">↗</a></div>').join('') : '<div style="font-size:11px;color:var(--text-3);">No payments</div>'
+      const refundHtml = t.refundTx ? '<div class="payment-mini" style="color:var(--red);"><span>REFUND</span><span style="margin:0 4px;">→</span><span>'+shortAddr(t.posterWallet)+'</span><span style="margin-left:4px;font-weight:600;">2 USDT</span><a href="'+etherscanTx(t.refundTx)+'" target="_blank" style="margin-left:auto;">↗</a></div>' : ''
+      return '<div class="task-row" onclick="this.classList.toggle(\'expanded\')"><div class="task-top"><div class="task-goal">'+t.goal+'</div>'+getStatusBadge(t.status)+'</div><div class="task-meta"><span>💰 '+t.budget+' USDT</span>'+(t.validatorScore!==null?'<span>📊 '+t.validatorScore+'/100</span>':'')+'<span>🕐 '+timeAgo(t.createdAt)+'</span></div><div class="task-detail"><div class="detail-grid"><div><div class="detail-label">Validator Breakdown</div>'+scoreHtml+(t.feedback?'<div style="font-size:11px;color:var(--text-2);margin-top:6px;font-style:italic;">"'+t.feedback+'"</div>':'')+'</div><div><div class="detail-label">Payments</div>'+pmtHtml+refundHtml+'</div></div></div></div>'
+    }).join('')
+  }
+
+  function renderValidator(last) {
+    if (!last) return
+    document.getElementById('lastRunTime').textContent = timeAgo(last.completedAt)
+    const bd = last.validatorBreakdown || {}
+    const approved = last.approved
+    document.getElementById('validatorResult').innerHTML = '<div class="score-big"><div class="score-number '+(approved?'approved':'rejected')+'">'+last.validatorScore+'</div><div style="display:flex;flex-direction:column;gap:4px;"><span class="score-label '+(approved?'approved':'rejected')+'">'+(approved?'✅ APPROVED':'❌ REJECTED')+'</span><span style="font-size:11px;font-family:DM Mono,monospace;color:var(--text-3);">out of 100</span></div></div><div style="font-size:12px;color:var(--text-2);margin-bottom:12px;font-weight:500;">'+last.goal+'</div><div class="breakdown-grid">'+[['Accuracy',bd.accuracy,'30%'],['Completeness',bd.completeness,'25%'],['Source Quality',bd.source_quality,'25%'],['Actionability',bd.actionability,'20%']].map(([d,v,w]) => '<div class="breakdown-item"><div class="breakdown-dim">'+d+'</div><div class="breakdown-score" style="color:'+scoreColor(v||0)+'">'+v+'</div><div class="breakdown-weight">'+w+' weight</div></div>').join('')+'</div>'+(last.feedback?'<div class="feedback-box">"'+last.feedback+'"</div>':'')
+  }
+
+  function renderYields(yields) {
+    if (!yields||!yields.length) return
+    document.getElementById('liveYields').innerHTML = yields.slice(0,5).map(y => '<div class="yield-row"><div><div class="yield-protocol">'+y.protocol+'<span class="yield-chain">'+y.chain+'</span></div><div style="font-size:10px;font-family:DM Mono,monospace;color:var(--text-3);">'+y.symbol+'</div></div><div style="text-align:right;"><div class="yield-apy">'+y.apy.toFixed(2)+'%</div><div class="yield-tvl">$'+y.tvlM.toFixed(0)+'M TVL</div></div></div>').join('')
+  }
+
+  function renderPayments(pmts) {
+    if (!pmts||!pmts.length) return
+    document.getElementById('paymentFeed').innerHTML = pmts.slice(0,8).map(p => '<div class="payment-row"><span class="pay-from">'+p.from+'</span><span class="pay-arrow">→</span><span class="pay-to">'+p.to+'</span><span class="pay-amount">'+p.amount+'</span><span class="pay-tx"><a href="'+etherscanTx(p.tx)+'" target="_blank">↗</a></span></div>').join('')
+  }
+
+  function checkEvents(data) {
+    if (!prevData) return
+    const nr = data.reputation||{}, or = prevData.reputation||{}
+    for (const [id,r] of Object.entries(nr)) {
+      if (r.banned && !or[id]?.banned) showToast('ban','Agent Banned',AGENT_LABELS[id]+' excluded from future rounds')
+    }
+    if (nr['scout-4'] && !or['scout-4']) showToast('spawn','New Agent Spawned','Scout-4 "The Newcomer" joined with 0 reputation')
+    const nt = data.tasks||[], ot = prevData.tasks||[]
+    for (const t of nt) {
+      const old = ot.find(x => x.id===t.id)
+      if (old&&old.status==='running') {
+        if (t.status==='completed') showToast('approved','Task Approved','Score: '+t.validatorScore+'/100 — Agents paid')
+        else if (t.status==='refunded') showToast('rejected','Task Rejected','Score: '+t.validatorScore+'/100 — User refunded')
+      }
+    }
+  }
+
+  async function loadData() {
+    try {
+      const data = await (await fetch('/dashboard-data')).json()
+      document.getElementById('statTotal').textContent = data.stats.total
+      document.getElementById('statCompleted').textContent = data.stats.completed
+      document.getElementById('statRate').textContent = data.stats.approvalRate+'%'
+      document.getElementById('statPaid').textContent = data.stats.totalPaid+' USDT'
+      document.getElementById('escrowPosted').textContent = (data.stats.total*3)+' USDT'
+      document.getElementById('escrowPaid').textContent = data.stats.totalPaid+' USDT'
+      document.getElementById('escrowRefunded').textContent = (data.stats.refunded*2)+' USDT'
+      checkEvents(data)
+      prevData = data
+      renderAgents(data.reputation||{})
+      renderTasks(data.tasks||[])
+      renderValidator(data.lastRun)
+      renderYields(data.liveYields||[])
+      renderPayments(data.lastPayments||[])
+    } catch(e) { console.error('Failed to load:',e) }
+  }
+
+  async function submitTask() {
+    const goal = document.getElementById('taskGoal').value.trim()
+    const budget = parseFloat(document.getElementById('taskBudget').value)||3
+    const wallet = document.getElementById('taskWallet').value.trim()
+    const btn = document.getElementById('submitBtn')
+    const status = document.getElementById('submitStatus')
+    if (!goal) { status.textContent='⚠ Please enter a goal'; status.style.color='var(--red)'; return }
+    if (budget < 3) { status.textContent='⚠ Minimum budget is 3 USDT'; status.style.color='var(--red)'; return }
+    btn.disabled=true; btn.innerHTML='<div class="loading"></div> Submitting...'
+    try {
+      const res = await fetch('/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal,budget,posterWallet:wallet})})
+      const d = await res.json()
+      if (d.success) {
+        status.textContent='✓ Task submitted — pipeline running'; status.style.color='var(--green)'
+        document.getElementById('taskGoal').value=''
+        showToast('submitted','Task Submitted','ID: '+d.taskId+' — Agents competing now')
+        setTimeout(loadData,2000); setTimeout(loadData,8000); setTimeout(loadData,20000)
+      } else { status.textContent='✗ '+(d.error||'Failed'); status.style.color='var(--red)' }
+    } catch(e) { status.textContent='✗ Connection error'; status.style.color='var(--red)' }
+    btn.disabled=false; btn.innerHTML='⚡ Submit Task'
+  }
+
+  loadData()
+  setInterval(loadData, 30000)
+  setInterval(() => { if ((window._lastTasks||[]).some(t=>t.status==='running'||t.status==='open')) loadData() }, 5000)
+</script>
+</body>
+</html>

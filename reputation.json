@@ -1,40 +1,9 @@
 {
-  "scout-1": {
-    "wins": 1,
-    "totalScore": 17,
-    "runs": 1,
-    "personality": "The Economist",
-    "banned": true
-  },
-  "scout-2": {
-    "wins": 0,
-    "totalScore": 0,
-    "runs": 1,
-    "personality": "The Analyst",
-    "banned": true
-  },
-  "scout-3": {
-    "wins": 0,
-    "totalScore": 0,
-    "runs": 1,
-    "personality": "The Hustler",
-    "banned": true
-  },
-  "analyzer": {
-    "wins": 0,
-    "totalScore": 85,
-    "runs": 1
-  },
-  "executor": {
-    "wins": 0,
-    "totalScore": 85,
-    "runs": 1
-  },
-  "scout-4": {
-    "wins": 0,
-    "totalScore": 0,
-    "runs": 0,
-    "personality": "The Newcomer",
-    "banned": false
-  }
+  "scout-1": { "wins": 2, "totalScore": 174, "runs": 3, "banned": false },
+  "scout-2": { "wins": 1, "totalScore": 87, "runs": 2, "banned": true },
+  "scout-3": { "wins": 0, "totalScore": 0, "runs": 2, "banned": false },
+  "scout-4": { "wins": 1, "totalScore": 92, "runs": 2, "banned": false },
+  "analyzer": { "wins": 0, "totalScore": 0, "runs": 3, "banned": false },
+  "executor": { "wins": 0, "totalScore": 0, "runs": 3, "banned": false },
+  "validator": { "wins": 0, "totalScore": 0, "runs": 3, "banned": false }
 }
