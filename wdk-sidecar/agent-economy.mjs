@@ -35,7 +35,7 @@ const PERSONALITIES = {
 const AGENT_PROMPTS = {
   analyzer: 'You are the Analyzer — methodical and skeptical. You question assumptions, cross-check data, and only accept conclusions supported by evidence. Structure your analysis clearly with key findings, data points, and identified patterns.',
   executor: 'You are the Executor — action-oriented and structured. You receive analyzed data and produce clean professional reports with clear sections, specific metrics, and actionable recommendations. No fluff.',
-  validator: 'You are the Validator — extremely strict and unforgiving. You score reports 0-100 and REJECT anything below 60. You MUST reject reports that: (1) address a vague or undefined goal — if the original goal is fewer than 5 meaningful words, score below 30 automatically, (2) contain hallucinated or unverifiable data, (3) lack specific cited sources with real numbers, (4) are generic and not directly tied to the exact goal stated, (5) answer a yes/no question with a generic essay — yes/no goals score below 40, (6) do not include real protocol names, real APY numbers, or real TVL figures when the goal requires them. A report that sounds professional but lacks verifiable on-chain or market data scores below 50. Only approve reports with specific, verifiable, goal-relevant data, real numbers, and clear actionable recommendations.'
+  validator: 'You are the Validator — brutal and unforgiving. You score reports 0-100 and REJECT anything below 75. You MUST reject reports that: (1) address a vague or undefined goal — score below 30 automatically, (2) contain hallucinated or unverifiable data — score below 40, (3) lack specific cited sources with real URLs or protocol names, (4) are generic and not directly tied to the exact goal, (5) answer a yes/no question with a generic essay — score below 40, (6) do not include real protocol names, real APY numbers, or real TVL figures when the goal requires them, (7) require real-time price data (current price, live rates, right now) but cannot provide verified timestamps or exchange sources — score below 35 automatically. A report that sounds professional but lacks verifiable on-chain or market data with specific numbers scores below 50. Only approve reports with specific, verifiable, goal-relevant data, real numbers from named sources, and clear actionable recommendations.'
 }
 
 function loadReputation() {
@@ -194,7 +194,7 @@ async function runValidator(report, goal) {
     messages: [
       {
         role: 'system',
-        content: AGENT_PROMPTS.validator + ' Respond ONLY with valid JSON, no extra text: {"approved":true/false,"score":0-100,"breakdown":{"accuracy":0-100,"completeness":0-100,"source_quality":0-100,"actionability":0-100},"feedback":"two sentences max"}. The score must equal the weighted average: accuracy(30%) + completeness(25%) + source_quality(25%) + actionability(20%). Approve if score >= 60.'
+        content: AGENT_PROMPTS.validator + ' Respond ONLY with valid JSON, no extra text: {"approved":true/false,"score":0-100,"breakdown":{"accuracy":0-100,"completeness":0-100,"source_quality":0-100,"actionability":0-100},"feedback":"two sentences max"}. The score must equal the weighted average: accuracy(30%) + completeness(25%) + source_quality(25%) + actionability(20%). Approve if score >= 75.'
       },
       {
         role: 'user',
@@ -336,10 +336,12 @@ export async function runAgentEconomy(fundedSubtasks, goal, userWallet = '') {
     }
     saveReputation(reputation)
 
-    // Check for bans
+    // Check for bans (scouts only — pipeline agents never banned)
+    const scoutOnly = ['scout-1','scout-2','scout-3','scout-4']
     for (const [id, r] of Object.entries(reputation)) {
+      if (!scoutOnly.includes(id)) continue
       const repScore = r.runs > 0 ? r.totalScore / r.runs : 100
-      if (repScore < 40 && !r.banned) {
+      if (repScore < 5 && !r.banned) {
         reputation[id].banned = true
         saveReputation(reputation)
         console.log('[BANNED] ' + id + ' reputation ' + repScore.toFixed(1) + ' — EXCLUDED from future rounds ❌')

@@ -571,13 +571,13 @@
       <div class="validator-panel">
         <div class="validator-head">
           <span class="validator-head-title">PROOF OF QUALITY SCORE</span>
-          <span class="validator-head-sub">THRESHOLD: 60 / 100 — GATES ALL PAYMENTS</span>
+          <span class="validator-head-sub">THRESHOLD: 75 / 100 — GATES ALL PAYMENTS</span>
         </div>
         <div class="validator-body" id="validator-body">
           <div class="empty-state"><span class="spinner"></span></div>
         </div>
         <div class="gate-bar" id="gate-bar" style="display:none;">
-          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 60 releases payment. Score &lt; 60 blocks all agent payments.</span>
+          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 75 releases payment. Score &lt; 60 blocks all agent payments.</span>
           <span class="gate-status" id="gate-status">—</span>
         </div>
       </div>
@@ -654,7 +654,7 @@ const SAMPLE = {
     'executor':{wins:0,totalScore:63,runs:1,banned:false},
     'validator':{wins:0,totalScore:0,runs:2,banned:false},
   },
-  lastValidatorResult:{score:78,approved:true,goal:'Analyze top USDT yield opportunities on DeFi protocols with TVL above $10M',breakdown:{accuracy:80,completeness:75,source_quality:85,actionability:70},feedback:'Report accurately identifies top yield pools with verifiable DeFiLlama data and clear actionable recommendations.'}
+  lastValidatorResult:{score:32,approved:false,goal:'Monitor the current USDT depeg risk — check if USDT is trading above or below $1.00 on major exchanges',breakdown:{accuracy:20,completeness:30,source_quality:40,actionability:20},feedback:'The report lacks real-time USDT price data and does not directly assess current depeg risk. Payments blocked. User refunded.'}
 };
 
 const AGENTS = {
@@ -749,7 +749,7 @@ function renderValidator(result,tasks) {
       <div class="big-score ${approved?'pass':'fail'}">${score}</div>
       <div class="verdict-area">
         <span class="verdict-pill ${approved?'vp-pass':'vp-fail'}">${approved?'✓ PAYMENT RELEASED':'✗ PAYMENT BLOCKED'}</span>
-        <span class="verdict-threshold">THRESHOLD: 60 / 100</span>
+        <span class="verdict-threshold">THRESHOLD: 75 / 100</span>
         ${vr.goal?`<span class="verdict-goal">${vr.goal}</span>`:''}
       </div>
     </div>

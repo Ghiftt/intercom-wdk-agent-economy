@@ -41,7 +41,7 @@ function runPipeline(task) {
   }
 
   const safeGoal = task.goal.replace(/"/g, '\\"')
-  const safeWallet = (task.posterWallet || '').replace(/"/g, '')
+  const safeWallet = (task.posterWallet || '0xB41661732287b01969eD4DD74b7E1e646A4F11d4').replace(/"/g, '')
   const command = `node ${PROJECT_PATH}/src/orchestrator.js --goal "${safeGoal}" --userWallet="${safeWallet}" --taskId="${task.id}"`
 
   console.log('[PROVEX] Running pipeline for task: ' + task.id)
@@ -199,6 +199,13 @@ app.get('/dashboard-data', (req, res) => {
     reputation,
     tasks: tasks.slice(-20).reverse(),
     lastRun,
+    lastValidatorResult: lastRun ? {
+      score: lastRun.validatorScore,
+      approved: lastRun.approved,
+      goal: lastRun.goal,
+      breakdown: lastRun.validatorBreakdown,
+      feedback: lastRun.validatorFeedback
+    } : null,
     liveYields,
     lastPayments
   })
