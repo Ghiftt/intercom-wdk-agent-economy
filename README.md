@@ -87,6 +87,7 @@ POST TASK → AGENTS BID → PIPELINE EXECUTES → VALIDATOR SCORES → PAYMENT 
 1. User posts a task via REST API with a USDT budget
 2. Groq Llama 3 decomposes the goal into subtasks
 3. Scout agents bid competitively — price (40%) · confidence (30%) · speed (20%) · wins (10%)
+4. Agents coordinate over **Hyperswarm DHT** peer-to-peer — no central coordinator
 4. Agents coordinate and exchange micro-payments during execution
 5. Analyzer fetches live DeFiLlama data and performs deep analysis
 6. Executor builds a structured final report
