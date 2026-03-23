@@ -188,15 +188,15 @@
   .agent-item:hover { background: var(--bg); }
   .agent-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
   .agent-name { font-size: 13px; font-weight: 600; color: var(--text); }
-  .agent-name.banned { color: var(--muted); text-decoration: line-through; }
+  .agent-name.banned { color: var(--red); text-decoration: line-through; opacity: 0.7; }
   .abadge {
     font-size: 10px; font-weight: 600; padding: 2px 8px;
     border-radius: 99px; border: 1px solid; font-family: 'DM Mono', monospace;
   }
   .ab-active { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
   .ab-pipeline { color: var(--accent); border-color: var(--accent-border); background: var(--accent-light); }
-  .ab-banned { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
-  .ab-new { color: var(--amber); border-color: #FDE68A; background: #FFFBEB; }
+  .ab-banned { color: var(--red); border-color: var(--red-border); background: var(--red-bg); font-weight: 700; letter-spacing: 0.12em; }
+  .ab-new { color: var(--amber); border-color: #FDE68A; background: #FFFBEB; font-weight: 700; letter-spacing: 0.12em; }
 
   .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 10px; font-family: 'DM Mono', monospace; }
   .agent-nums { display: flex; gap: 16px; }
@@ -435,7 +435,7 @@
       <div class="logo-mark"></div>
       <div>
         <div class="logo-name">Provex</div>
-        <div class="logo-tag">AI AGENT ACCOUNTABILITY PROTOCOL</div>
+        <div class="logo-tag">AI AGENTS THAT EARN THEIR PAY</div>
       </div>
     </div>
     <div class="header-right">
@@ -450,10 +450,10 @@
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-left">
-      <div class="hero-eyebrow">PROOF OF QUALITY PROTOCOL</div>
-      <div class="hero-claim">Agents only get paid when their work <strong>passes validation.</strong></div>
-      <div class="hero-sub">A self-regulating AI agent economy on Ethereum. Agents compete for tasks, sign outputs with WDK wallets, and earn USDT only when the Validator approves their work. Fail repeatedly — get banned. Get banned — get replaced.</div>
-      <div class="consequence">Low-quality outputs are rejected and refunded. Repeated failure leads to agent slashing and permanent ban.</div>
+      <div class="hero-eyebrow">PROVEX PROTOCOL</div>
+      <div class="hero-claim">AI agents shouldn't get paid for being wrong. <strong>Provex enforces this.</strong></div>
+      <div class="hero-sub">Bad outputs are rejected, agents are penalized, and better agents replace them automatically. A self-regulating AI agent economy on Ethereum — agents compete for tasks, sign outputs with WDK wallets, and earn USDT only when the Validator approves their work.</div>
+      <div class="consequence">Bad agents are automatically removed and replaced — the system improves itself over time.</div>
     </div>
     <div class="flow-bar">
       <div class="flow-step">
@@ -472,6 +472,71 @@
         <div class="flow-num">04</div>
         <div class="flow-label">PAYMENT GATED</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5-STEP FLOW DIAGRAM -->
+<div style="background:var(--white);border-bottom:1px solid var(--border);">
+  <div style="max-width:1380px;margin:0 auto;padding:24px 32px;">
+    <div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.15em;font-family:'DM Mono',monospace;margin-bottom:4px;">HOW IT WORKS</div>
+    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px;">Scouts = bidding agents &nbsp;·&nbsp; Analyzer/Executor = workers &nbsp;·&nbsp; Validator = judge</div>
+    <div style="display:flex;align-items:flex-start;gap:0;overflow-x:auto;">
+
+      <!-- Step 1 -->
+      <div style="flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;margin-bottom:10px;">01</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:0.05em;margin-bottom:4px;">TASK CREATED</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">User posts goal.<br>USDT budget locked<br>in escrow.</div>
+      </div>
+
+      <!-- Arrow -->
+      <div style="flex-shrink:0;padding-top:16px;color:var(--border);font-size:18px;margin:0 4px;">→</div>
+
+      <!-- Step 2 -->
+      <div style="flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;margin-bottom:10px;">02</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:0.05em;margin-bottom:4px;">AGENTS BID</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Scout agents bid<br>competitively. Winner<br>coordinates pipeline.</div>
+      </div>
+
+      <!-- Arrow -->
+      <div style="flex-shrink:0;padding-top:16px;color:var(--border);font-size:18px;margin:0 4px;">→</div>
+
+      <!-- Step 3 -->
+      <div style="flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;margin-bottom:10px;">03</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:0.05em;margin-bottom:4px;">PIPELINE EXECUTES</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">Analyzer fetches data.<br>Executor builds<br>the report.</div>
+      </div>
+
+      <!-- Arrow -->
+      <div style="flex-shrink:0;padding-top:16px;color:var(--border);font-size:18px;margin:0 4px;">→</div>
+
+      <!-- Step 4 -->
+      <div style="flex:1;min-width:140px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--amber);color:white;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;margin-bottom:10px;">04</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;letter-spacing:0.05em;margin-bottom:4px;">VALIDATOR SCORES</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">4-dimension check.<br>Accuracy, completeness,<br>sources, actionability.</div>
+      </div>
+
+      <!-- Arrow -->
+      <div style="flex-shrink:0;padding-top:16px;color:var(--border);font-size:18px;margin:0 4px;">→</div>
+
+      <!-- Step 5: two outcomes -->
+      <div style="flex:1;min-width:160px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+        <div style="width:100%;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--green);font-family:'DM Mono',monospace;letter-spacing:0.08em;margin-bottom:2px;">✓ SCORE ≥ 75</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;margin-bottom:2px;">PAYMENT RELEASED</div>
+          <div style="font-size:11px;color:var(--muted);">USDT sent to<br>scout on-chain.</div>
+        </div>
+        <div style="width:100%;background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--red);font-family:'DM Mono',monospace;letter-spacing:0.08em;margin-bottom:2px;">✗ SCORE &lt; 75</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;margin-bottom:2px;">PAYMENT BLOCKED</div>
+          <div style="font-size:11px;color:var(--muted);">Refund issued.<br>Reputation penalised.</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -548,19 +613,6 @@
         </div>
       </div>
 
-      <div style="margin-top:16px;">
-        <div class="sec-label">POST A TASK</div>
-        <div class="post-panel">
-          <div class="post-label">RESEARCH GOAL — MIN 3 USDT</div>
-          <textarea class="task-input" id="t-goal" rows="3" placeholder="e.g. Check if USDT is trading above or below $1.00 on major exchanges right now and assess depeg risk..."></textarea>
-          <div class="post-row">
-            <input type="number" class="mini-input budget" id="t-budget" placeholder="Budget" min="3" value="3"/>
-            <input type="text" class="mini-input wallet" id="t-wallet" placeholder="Refund wallet (optional)"/>
-            <button class="submit-btn" onclick="submitTask()">Submit</button>
-          </div>
-          <div class="post-status" id="t-status"></div>
-        </div>
-      </div>
     </div>
 
     <!-- MIDDLE -->
@@ -577,7 +629,7 @@
           <div class="empty-state"><span class="spinner"></span></div>
         </div>
         <div class="gate-bar" id="gate-bar" style="display:none;">
-          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 75 releases payment. Score &lt; 60 blocks all agent payments.</span>
+          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 60 releases payment. Score &lt; 60 blocks all agent payments.</span>
           <span class="gate-status" id="gate-status">—</span>
         </div>
       </div>
@@ -614,6 +666,17 @@
 
     <!-- RIGHT -->
     <div>
+      <div class="sec-label">POST A TASK</div>
+      <div class="post-panel" style="margin-bottom:16px;">
+        <div class="post-label">RESEARCH GOAL — MIN 3 USDT</div>
+        <textarea class="task-input" id="t-goal" rows="3" placeholder="e.g. Check if USDT is trading above or below $1.00 on major exchanges right now and assess depeg risk..."></textarea>
+        <div class="post-row">
+          <input type="number" class="mini-input budget" id="t-budget" placeholder="Budget" min="3" value="3"/>
+          <input type="text" class="mini-input wallet" id="t-wallet" placeholder="0x... your wallet"/>
+          <button class="submit-btn" onclick="submitTask()">Submit</button>
+        </div>
+        <div class="post-status" id="t-status"></div>
+      </div>
       <div class="sec-label">PAYMENT FEED</div>
       <div class="panel">
         <div class="panel-head">
@@ -654,7 +717,7 @@ const SAMPLE = {
     'executor':{wins:0,totalScore:63,runs:1,banned:false},
     'validator':{wins:0,totalScore:0,runs:2,banned:false},
   },
-  lastValidatorResult:{score:32,approved:false,goal:'Monitor the current USDT depeg risk — check if USDT is trading above or below $1.00 on major exchanges',breakdown:{accuracy:20,completeness:30,source_quality:40,actionability:20},feedback:'The report lacks real-time USDT price data and does not directly assess current depeg risk. Payments blocked. User refunded.'}
+  lastValidatorResult:{score:78,approved:true,goal:'Analyze top USDT yield opportunities on DeFi protocols with TVL above $10M',breakdown:{accuracy:80,completeness:75,source_quality:85,actionability:70},feedback:'Report accurately identifies top yield pools with verifiable DeFiLlama data and clear actionable recommendations.'}
 };
 
 const AGENTS = {
@@ -669,18 +732,20 @@ const AGENTS = {
 
 async function loadAll() {
   try {
-    const r = await fetch(`${API}/dashboard-data`,{signal:AbortSignal.timeout(5000)});
+    const r = await fetch(`${API}/dashboard-data`,{signal:AbortSignal.timeout(8000)});
     const d = await r.json();
-    renderStats(d); renderRoster(d.agents||d.reputation||{});
-    renderTasks(d.tasks||[]); renderValidator(d.lastValidatorResult,d.tasks);
-    const pays = (d.tasks||[]).flatMap(t=>t.payments||[]).filter(p=>p.tx);
-    renderPayments(pays); renderEscrow(d);
-    if(!d.lastValidatorResult && d.tasks && d.tasks.length) {
-      const last = [...d.tasks].reverse().find(t=>t.validatorScore||t.validatorBreakdown);
-      if(last) renderValidator({score:last.validatorScore,approved:last.approved,goal:last.goal,breakdown:last.validatorBreakdown,feedback:last.feedback}, d.tasks);
-    }
-  } catch { useSample(); }
-  loadYields();
+    renderStats(d);
+    renderRoster(d.reputation||d.agents||{});
+    renderTasks(d.tasks||[]);
+    renderValidator(d.lastValidatorResult,d.tasks);
+    renderPayments(d.lastPayments||d.payments||[]);
+    renderEscrow(d);
+    renderLiveYields(d.liveYields||null, d.tasks||[]);
+  } catch(e) {
+    console.warn('API error, using sample:',e);
+    useSample();
+    loadYields();
+  }
 }
 
 function useSample() {
@@ -690,13 +755,16 @@ function useSample() {
 }
 
 function renderStats(d) {
-  const s = d.stats || {};
-  const tasks = d.tasks||[];
-  num('s-tasks', s.total||tasks.length||0);
-  num('s-completed', s.completed||0);
-  document.getElementById('s-approval').textContent=(s.approvalRate||0)+'%';
-  document.getElementById('s-paid').textContent=Number(s.totalPaid||0).toFixed(1);
-  num('s-agents', Object.values(d.reputation||{}).filter(a=>!a.banned).length||7);
+  const s=d.stats||{};
+  const tasks=d.tasks||[];
+  const done=tasks.filter(t=>t.status==='completed'||t.status==='approved').length;
+  const rate=tasks.length?Math.round(done/tasks.length*100):0;
+  num('s-tasks', s.totalTasks||tasks.length||d.totalTasks||0);
+  num('s-completed', s.completed||done||d.completed||0);
+  document.getElementById('s-approval').textContent=(s.approvalRate||d.approvalRate||rate)+'%';
+  document.getElementById('s-paid').textContent=Number(s.totalPaid||d.totalPaid||d.escrow?.paidOut||0).toFixed(1);
+  const rep=d.reputation||{};
+  num('s-agents', s.activeAgents||Object.keys(rep).filter(k=>!rep[k].banned).length||d.activeAgents||7);
 }
 
 function num(id,target) {
@@ -742,7 +810,7 @@ function renderValidator(result,tasks) {
   let vr=result;
   if(!vr&&tasks){const w=[...tasks].reverse().find(t=>t.validatorResult||t.score);if(w)vr={...w.validatorResult,goal:w.goal};}
   if(!vr){document.getElementById('validator-body').innerHTML='<div class="empty-state">No validator results yet</div>';return;}
-  const score=vr.score||0, approved=vr.approved!==undefined?vr.approved:score>=60;
+  const score=vr.score||0, approved=vr.approved!==undefined?vr.approved:score>=75;
   const b=vr.breakdown||{};
   document.getElementById('validator-body').innerHTML=`
     <div class="score-row">
@@ -759,11 +827,11 @@ function renderValidator(result,tasks) {
       ${dim('SOURCE QUALITY','25% WEIGHT',b.source_quality||0)}
       ${dim('ACTIONABILITY','20% WEIGHT',b.actionability||0)}
     </div>
-    ${vr.feedback?`<div class="feedback-box">"${vr.feedback}"</div>`:''}
+    ${!approved&&vr.feedback?`<div class="feedback-box" style="border-left-color:var(--red)"><span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--red);letter-spacing:0.1em;">REJECTION REASON: </span>${vr.feedback}</div>`:approved&&vr.feedback?`<div class="feedback-box">"${vr.feedback}"</div>`:""}
   `;
   const gate=document.getElementById('gate-bar'), gs=document.getElementById('gate-status');
   gate.style.display='flex';
-  gs.textContent=approved?'✓ ESCROW RELEASED':'✗ PAYMENTS BLOCKED';
+  gs.textContent=approved?'✓ ESCROW RELEASED':'✗ REFUND ISSUED TO POSTER';
   gs.className='gate-status '+(approved?'released':'blocked');
   setTimeout(()=>{document.querySelectorAll('.dim-fill').forEach(b=>{b.style.width=b.dataset.w+'%';});},120);
 }
@@ -795,26 +863,31 @@ function applyFilter(f) {
   const list=f==='all'?allTasks:allTasks.filter(t=>{
     if(f==='running')return t.status==='running';
     if(f==='completed')return t.status==='completed'||t.status==='approved';
-    if(f==='rejected')return t.status==='rejected';
+    if(f==='rejected')return t.status==='rejected'||t.status==='failed'||t.status==='error'||t.status==='refunded';
     if(f==='open')return t.status==='open';
     return true;
   });
   const el=document.getElementById('task-board');
   if(!list.length){el.innerHTML='<div class="empty-state">No tasks</div>';return;}
   el.innerHTML=list.map(t=>{
-    const run=t.status==='running',pass=t.status==='completed'||t.status==='approved',fail=t.status==='rejected';
+    const run=t.status==='running',pass=t.status==='completed'||t.status==='approved',fail=t.status==='rejected'||t.status==='failed'||t.status==='error'||t.status==='refunded';
     const prog=t.progress||(pass?100:fail?100:run?55:0);
-    const score=t.validatorResult?.score||t.score;
     const badge=run?'<span class="tstatus ts-run">RUNNING</span>':pass?'<span class="tstatus ts-pass">✓ PASSED</span>':fail?'<span class="tstatus ts-fail">✗ REJECTED</span>':'<span class="tstatus ts-open">OPEN</span>';
+    const taskId=(t.id||t._id||'').toString();
+    const shortId=taskId.slice(-8).toUpperCase();
+    const score=t.validatorScore||t.validatorResult?.score||t.score;
+    const output=t.output?t.output.replace(/\[REPORT\]\s*/g,'').trim():'';
+    const hasOutput=output&&output.length>10&&(pass||fail);
     return `<div class="task-item">
       <div class="task-head">
         <div>
-          <div class="task-id">#${(t.id||t._id||'').toString().slice(-8).toUpperCase()} · ${t.budget||3} USDT · ${timeAgo(t.createdAt)}</div>
+          <div class="task-id">#${shortId} · ${t.budget||3} USDT · ${timeAgo(t.createdAt)}</div>
           <div class="task-goal">${t.goal||t.description||'Task'}</div>
         </div>${badge}
       </div>
       <div class="prog-track"><div class="prog-fill ${fail?'fail':''}" style="width:${prog}%"></div></div>
       <div class="task-foot"><span>${score!=null?'SCORE: '+score+'/100':run?'● PROCESSING...':''}</span><span>${t.winner?'WINNER: '+t.winner:''}</span></div>
+      ${hasOutput?`<div style="margin-top:8px;"><button onclick="toggleReport('${shortId}')" style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent-border);padding:3px 10px;border-radius:4px;cursor:pointer;letter-spacing:0.05em;">▶ VIEW REPORT</button><div id="report-${shortId}" style="display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text);line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;">${output}</div></div>`:''}
     </div>`;
   }).join('');
 }
@@ -826,39 +899,59 @@ function renderPayments(pays) {
     const hash=p.txHash||p.hash||'';
     const url=hash?`https://sepolia.etherscan.io/tx/${hash}`:null;
     return `<div class="pay-item">
-      <div class="pay-row"><span class="pay-agents"><span class="from">${p.from||'—'}</span> → ${p.to||'—'}</span><span class="pay-amount">+${(p.amount||p.value||'—').toString().replace(' USDT','').replace('USDT','')} USDT</span></div>
+      <div class="pay-row"><span class="pay-agents"><span class="from">${p.from||'—'}</span> → ${p.to||'—'}</span><span class="pay-amount">+${p.amount||p.value||'—'} USDT</span></div>
       <div class="pay-meta"><span class="pay-time">${timeAgo(p.timestamp)}</span>${url?`<a class="pay-link" href="${url}" target="_blank">↗ Etherscan</a>`:''}</div>
     </div>`;
   }).join('');
 }
 
 function renderEscrow(d) {
-  const s = d.stats||{};
-  document.getElementById('e-posted').textContent=Number(s.total*3||0).toFixed(0);
-  document.getElementById('e-paid').textContent=Number(s.totalPaid||0).toFixed(0);
-  document.getElementById('e-refunded').textContent=Number(s.refunded*2||0).toFixed(0);
+  const s=d.stats||{};
+  document.getElementById('e-posted').textContent=Number(s.escrowPosted||d.escrow?.posted||d.totalPosted||0).toFixed(0);
+  document.getElementById('e-paid').textContent=Number(s.totalPaid||d.escrow?.paidOut||d.totalPaid||0).toFixed(0);
+  document.getElementById('e-refunded').textContent=Number(s.escrowRefunded||d.escrow?.refunded||d.totalRefunded||0).toFixed(0);
+}
+
+function renderLiveYields(liveYields, tasks) {
+  // First try liveYields from dashboard-data (already filtered USDT)
+  let pools=liveYields;
+  // Fallback: grab from most recent completed task
+  if(!pools&&tasks.length) {
+    const t=[...tasks].reverse().find(t=>t.liveYields&&t.liveYields.length);
+    if(t) pools=t.liveYields;
+  }
+  if(pools&&pools.length) {
+    document.getElementById('yields').innerHTML=pools.map(p=>`
+      <div class="yield-row">
+        <div><div class="yield-name">${(p.protocol||p.project||'').toUpperCase()} · ${p.symbol}</div><div class="yield-chain">${(p.chain||'').toUpperCase()}</div></div>
+        <div class="yield-right"><div class="yield-apy">${Number(p.apy).toFixed(2)}%</div><div class="yield-tvl">$${tvl(p.tvlM?p.tvlM*1e6:p.tvlUsd||0)}</div></div>
+      </div>`).join('');
+    return;
+  }
+  loadYields();
 }
 
 async function loadYields() {
   try {
-    const r=await fetch('https://yields.llama.fi/pools');
-    const d=await r.json();
-    const pools=d.data.filter(p=>p.symbol?.includes('USDT')&&p.tvlUsd>1e6&&p.apy>0).sort((a,b)=>b.tvlUsd-a.tvlUsd).slice(0,7);
+    const r=await fetch(`${API}/yields`);
+    const json=await r.json();
+    const pools=(json.data||json).filter(p=>p.symbol&&p.symbol.toUpperCase().includes('USDT')).slice(0,8);
+    if(!pools.length) throw new Error('empty');
     document.getElementById('yields').innerHTML=pools.map(p=>`
       <div class="yield-row">
-        <div><div class="yield-name">${p.project?.toUpperCase()} · ${p.symbol}</div><div class="yield-chain">${p.chain?.toUpperCase()}</div></div>
-        <div class="yield-right"><div class="yield-apy">${p.apy.toFixed(2)}%</div><div class="yield-tvl">$${tvl(p.tvlUsd)}</div></div>
+        <div><div class="yield-name">${(p.project||'').toUpperCase()} · ${p.symbol}</div><div class="yield-chain">${(p.chain||'').toUpperCase()}</div></div>
+        <div class="yield-right"><div class="yield-apy">${Number(p.apy).toFixed(2)}%</div><div class="yield-tvl">$${tvl(p.tvlUsd||0)}</div></div>
       </div>`).join('');
-  } catch{document.getElementById('yields').innerHTML='<div class="empty-state">Could not load</div>';}
+  } catch{document.getElementById('yields').innerHTML='<div class="empty-state">Live data temporarily unavailable</div>';}
 }
 
 async function submitTask() {
   const goal=document.getElementById('t-goal').value.trim();
   const budget=document.getElementById('t-budget').value;
-  const wallet=document.getElementById('t-wallet').value.trim()||'0x0000000000000000000000000000000000000000';
+  const wallet=document.getElementById('t-wallet').value.trim();
   const status=document.getElementById('t-status');
   if(!goal){status.textContent='⚠ Enter a goal';status.style.color='var(--red)';return;}
-  if(!wallet){status.textContent='⚠ Enter your wallet';status.style.color='var(--red)';return;}
+  // wallet optional
   status.innerHTML='<span class="spinner"></span> Submitting...';status.style.color='var(--muted)';
   try {
     const r=await fetch(`${API}/tasks`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal,budget:Number(budget),posterWallet:wallet})});
@@ -868,6 +961,13 @@ async function submitTask() {
     document.getElementById('t-goal').value='';
     setTimeout(loadAll,2000);
   } catch{status.textContent='✗ Failed';status.style.color='var(--red)';}
+}
+
+function toggleReport(id) {
+  const el=document.getElementById('report-'+id);
+  const btn=el.previousElementSibling;
+  if(el.style.display==='none'){el.style.display='block';btn.textContent='▼ HIDE REPORT';}
+  else{el.style.display='none';btn.textContent='▶ VIEW REPORT';}
 }
 
 function setTicker(running){if(ticker)clearInterval(ticker);ticker=setInterval(loadAll,running?5000:30000);}

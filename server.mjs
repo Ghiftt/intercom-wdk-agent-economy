@@ -10,6 +10,13 @@ dotenv.config()
 
 const app = express()
 app.use(express.json())
+app.use((req,res,next)=>{
+  res.setHeader('Access-Control-Allow-Origin','*')
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers','Content-Type')
+  if(req.method==='OPTIONS') return res.sendStatus(204)
+  next()
+})
 
 const TASKS_FILE = resolve(__dirname, 'tasks.json')
 const PROJECT_PATH = '/home/ubuntu/intercom-wdk-agent-economy'
@@ -267,6 +274,17 @@ app.use(express.static('/home/ubuntu/intercom-wdk-agent-economy'))
 app.use(express.static('/home/ubuntu/intercom-wdk-agent-economy'))
 
 const PORT = 3001
+
+app.get('/yields', async (req, res) => {
+  try {
+    const r = await fetch('https://yields.llama.fi/pools');
+    const d = await r.json();
+    res.json(d);
+  } catch (e) {
+    res.status(502).json({ error: 'upstream failed' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log('[PROVEX] Agent Marketplace running on port ' + PORT)
   console.log('[PROVEX] Dashboard: http://localhost:' + PORT)

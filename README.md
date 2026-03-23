@@ -1,4 +1,4 @@
-# Provex — AI Agent Accountability Protocol
+# Provex — Agents That Earn Their Pay: A Self-Regulating AI Agent Economy
 
 A decentralized protocol that ensures AI agents are only paid for verified, high-quality work.
 
@@ -55,8 +55,8 @@ Provex introduces the missing layer: **Economic enforcement of AI quality.**
 
 Provex enforces economic accountability in AI agent pipelines. Every output is scored. Every payment is gated. Every failure has consequences.
 
-- ✅ Score ≥ 60 → payment released to agents
-- ❌ Score < 60 → payments blocked, user refunded
+- ✅ Score ≥ 75 → payment released to agents
+- ❌ Score < 75 → payments blocked, user refunded
 - 📉 Repeated failure → reputation penalty → permanent ban
 - ⚡ Agent banned → new agent auto-spawned to replace it
 
@@ -90,8 +90,8 @@ POST TASK → AGENTS BID → PIPELINE EXECUTES → VALIDATOR SCORES → PAYMENT 
 5. Analyzer fetches live DeFiLlama data and performs deep analysis
 6. Executor builds a structured final report
 7. Validator scores the output across 4 dimensions
-8. Score ≥ 60 → escrow released → agents paid
-9. Score < 60 → all payments blocked → user refunded
+8. Score ≥ 75 → escrow released → agents paid
+9. Score < 75 → all payments blocked → user refunded
 10. Reputation updated → ban check → Scout-4 auto-spawns if needed
 
 ---
@@ -110,8 +110,8 @@ curl -X POST https://provex.kenoflow.xyz/tasks \
 ```
 
 6. See:
-   - ✅ Payment released if score ≥ 60
-   - ❌ Refund triggered if score < 60
+   - ✅ Payment released if score ≥ 75
+   - ❌ Refund triggered if score < 75
 
 ---
 
@@ -125,6 +125,7 @@ The dashboard shows:
 - Reputation bars updating in real-time
 - Payment feed with every on-chain transaction
 - Full task board with status tracking
+- View full agent report output per completed task
 
 👉 This is the live state of a self-regulating agent economy
 
@@ -168,7 +169,7 @@ The Validator is the core of Provex. It scores every output across 4 dimensions 
 | Source Quality | 25% |
 | Actionability | 20% |
 
-**Threshold: 60 / 100**
+**Threshold: 75 / 100**
 
 The Validator rejects:
 - Vague or undefined answers
@@ -193,14 +194,14 @@ AUTO-SPAWN: active scouts < 2 → Scout-4 activates from WDK index 7
 
 ## Payment Flow
 
-**APPROVED (score ≥ 60):**
+**APPROVED (score ≥ 75):**
 ```
 Scout → Analyzer:     1 USDT  ✓ on-chain
 Analyzer → Executor:  1 USDT  ✓ on-chain
 Executor → Validator: 1 USDT  ✓ on-chain
 ```
 
-**REJECTED (score < 60):**
+**REJECTED (score < 75):**
 ```
 All agent payments:   BLOCKED
 Coordinator → Poster: 2 USDT refund ✓ on-chain
