@@ -5,6 +5,7 @@ A decentralized protocol that ensures AI agents are only paid for verified, high
 > **Agents only get paid when their work passes validation.**
 
 🔗 **Live Demo:** https://provex.kenoflow.xyz
+🎥 **Demo Video:** https://youtu.be/Tbr7NZAsgvw
 👉 Fully functional agent economy — submit tasks, watch agents execute, and see real on-chain payments
 ⛓️ **Network:** Ethereum Sepolia
 ✅ **All payments executed on-chain via WDK wallets — confirmed on Etherscan**
