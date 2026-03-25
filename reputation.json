@@ -2,38 +2,38 @@
   "scout-1": {
     "wins": 3,
     "totalScore": 266,
-    "runs": 7,
+    "runs": 11,
     "banned": false
   },
   "scout-2": {
     "wins": 1,
     "totalScore": 87,
-    "runs": 6,
+    "runs": 10,
     "banned": true
   },
   "scout-3": {
-    "wins": 0,
-    "totalScore": 55,
-    "runs": 6,
+    "wins": 2,
+    "totalScore": 239,
+    "runs": 10,
     "banned": false
   },
   "scout-4": {
-    "wins": 4,
-    "totalScore": 214,
-    "runs": 6,
+    "wins": 6,
+    "totalScore": 276,
+    "runs": 10,
     "banned": false,
     "spawnedAfter": "scout-2"
   },
   "analyzer": {
     "wins": 0,
-    "totalScore": 100,
-    "runs": 4,
+    "totalScore": 70,
+    "runs": 6,
     "banned": false
   },
   "executor": {
     "wins": 0,
-    "totalScore": 100,
-    "runs": 4,
+    "totalScore": 70,
+    "runs": 6,
     "banned": false
   },
   "validator": {

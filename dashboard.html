@@ -629,7 +629,7 @@
           <div class="empty-state"><span class="spinner"></span></div>
         </div>
         <div class="gate-bar" id="gate-bar" style="display:none;">
-          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 60 releases payment. Score &lt; 60 blocks all agent payments.</span>
+          <span class="gate-rule"><strong>RULE:</strong> Score ≥ 75 releases payment. Score &lt; 75 blocks all agent payments.</span>
           <span class="gate-status" id="gate-status">—</span>
         </div>
       </div>
@@ -659,7 +659,7 @@
           <span class="panel-title">USDT POOLS</span>
           <span style="font-size:11px;color:var(--green);font-family:'DM Mono',monospace;font-weight:600;">● LIVE</span>
         </div>
-        <div id="yields"><div class="empty-state"><span class="spinner"></span></div></div>
+        <div id="yields"><div class="empty-state"><span class="spinner"></span></div></div><div style="padding:10px 18px 14px;font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;line-height:1.5;border-top:1px solid var(--border);">The Analyzer agent pulls these live yields via DeFiLlama when researching tasks like 'top USDT opportunities' — then the Validator checks accuracy against on-chain reality.</div>
       </div>
 
     </div>
@@ -876,7 +876,7 @@ function applyFilter(f) {
     const taskId=(t.id||t._id||'').toString();
     const shortId=taskId.slice(-8).toUpperCase();
     const score=t.validatorScore||t.validatorResult?.score||t.score;
-    const output=t.output?t.output.replace(/\[REPORT\]\s*/g,'').trim():'';
+    const output=t.output?t.output.replace(/\[REPORT\]\s*/g,'').replace(/\[PORT\]\s*/g,'').replace(/\[RE\w*\]\s*/g,'').replace(/^[^A-Z#*\n•]*/,'').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/^\* /gm,'• ').trim():'';
     const hasOutput=output&&output.length>10&&(pass||fail);
     return `<div class="task-item">
       <div class="task-head">
@@ -887,7 +887,7 @@ function applyFilter(f) {
       </div>
       <div class="prog-track"><div class="prog-fill ${fail?'fail':''}" style="width:${prog}%"></div></div>
       <div class="task-foot"><span>${score!=null?'SCORE: '+score+'/100':run?'● PROCESSING...':''}</span><span>${t.winner?'WINNER: '+t.winner:''}</span></div>
-      ${hasOutput?`<div style="margin-top:8px;"><button onclick="toggleReport('${shortId}')" style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent-border);padding:3px 10px;border-radius:4px;cursor:pointer;letter-spacing:0.05em;">▶ VIEW REPORT</button><div id="report-${shortId}" style="display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text);line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;">${output}</div></div>`:''}
+      ${hasOutput?`<div style="margin-top:8px;"><button onclick="toggleReport('${shortId}')" style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent-border);padding:3px 10px;border-radius:4px;cursor:pointer;letter-spacing:0.05em;">▶ VIEW REPORT</button><div id="report-${shortId}" style="display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);line-height:1.8;max-height:300px;overflow-y:auto;">${output}</div></div>`:''}
     </div>`;
   }).join('');
 }
