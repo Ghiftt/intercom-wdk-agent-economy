@@ -199,12 +199,12 @@ app.get('/dashboard-data', (req, res) => {
   const liveYields = lastRun?.liveYields || []
 
   // All payments from last run
-  const lastPayments = lastRun?.payments || []
+  const lastPayments = tasks.filter(t=>t.payments).flatMap(t=>t.payments).slice(-20)
 
   res.json({
     stats: { total, completed, refunded, approvalRate, totalPaid },
     reputation,
-    tasks: tasks.slice(-10).reverse().map(t => ({...t, output: t.output ? t.output.slice(0, 200) : null, error: t.error ? t.error.slice(0, 100) : null})),
+    tasks: tasks.slice(-10).reverse().map(t => ({...t, output: t.output ? t.output : null, error: t.error ? t.error.slice(0, 100) : null})),
     lastRun: lastRun ? {...lastRun, output: lastRun.output ? lastRun.output.slice(0, 200) : null} : null,
     lastValidatorResult: lastRun ? {
       score: lastRun.validatorScore,
